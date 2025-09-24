@@ -1,0 +1,1736 @@
+basePath: /
+definitions:
+  domain.BackgroundCheckStatus:
+    enum:
+    - APPROVED
+    - PENDING
+    - REJECTED
+    type: string
+    x-enum-varnames:
+    - BackgroundCheckStatusApproved
+    - BackgroundCheckStatusPending
+    - BackgroundCheckStatusRejected
+  domain.ChangeReservationStatusRequest:
+    properties:
+      new_status:
+        $ref: '#/definitions/domain.ReservationStatus'
+      notes:
+        type: string
+    required:
+    - new_status
+    type: object
+  domain.CreateDriverRequest:
+    properties:
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      id:
+        maxLength: 20
+        minLength: 3
+        type: string
+      last_name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      phone:
+        maxLength: 50
+        minLength: 8
+        type: string
+      photo_url:
+        type: string
+      rut_or_dni:
+        maxLength: 50
+        minLength: 8
+        type: string
+      status:
+        $ref: '#/definitions/domain.DriverStatus'
+    required:
+    - first_name
+    - id
+    - last_name
+    - rut_or_dni
+    - status
+    type: object
+  domain.CreatePaymentRequest:
+    properties:
+      method:
+        $ref: '#/definitions/domain.PaymentGateway'
+      reservation_id:
+        type: string
+    required:
+    - method
+    - reservation_id
+    type: object
+  domain.CreateTimelineEventRequest:
+    properties:
+      description:
+        maxLength: 1000
+        minLength: 1
+        type: string
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
+      variant:
+        enum:
+        - default
+        - success
+        - warning
+        - error
+        - info
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  domain.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      org_id:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      role:
+        $ref: '#/definitions/domain.UserRole'
+    required:
+    - email
+    - name
+    - password
+    - role
+    type: object
+  domain.Driver:
+    properties:
+      availability:
+        $ref: '#/definitions/domain.DriverAvailability'
+      background_check:
+        $ref: '#/definitions/domain.DriverBackgroundCheck'
+      birth_date:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      kpis:
+        $ref: '#/definitions/domain.DriverKPIs'
+      last_name:
+        type: string
+      license:
+        allOf:
+        - $ref: '#/definitions/domain.DriverLicense'
+        description: Related data
+      phone:
+        type: string
+      photo_url:
+        type: string
+      rut_or_dni:
+        type: string
+      status:
+        $ref: '#/definitions/domain.DriverStatus'
+      updated_at:
+        type: string
+      vehicle:
+        $ref: '#/definitions/domain.Vehicle'
+    type: object
+  domain.DriverAvailability:
+    properties:
+      days:
+        items:
+          type: string
+        type: array
+      driver_id:
+        type: string
+      regions:
+        items:
+          type: string
+        type: array
+      time_ranges:
+        items:
+          $ref: '#/definitions/domain.TimeRange'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  domain.DriverBackgroundCheck:
+    properties:
+      checked_at:
+        type: string
+      driver_id:
+        type: string
+      file_url:
+        type: string
+      status:
+        $ref: '#/definitions/domain.BackgroundCheckStatus'
+    type: object
+  domain.DriverFeedback:
+    properties:
+      comment:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      passenger_name:
+        type: string
+      rating:
+        type: integer
+      trip:
+        allOf:
+        - $ref: '#/definitions/domain.Reservation'
+        description: Related data
+      trip_id:
+        type: string
+    type: object
+  domain.DriverKPIs:
+    properties:
+      average_rating:
+        type: number
+      cancel_rate:
+        type: number
+      on_time_rate:
+        type: number
+      total_km:
+        type: number
+      total_trips:
+        type: integer
+    type: object
+  domain.DriverLicense:
+    properties:
+      class:
+        $ref: '#/definitions/domain.LicenseClass'
+      driver_id:
+        type: string
+      expires_at:
+        type: string
+      file_url:
+        type: string
+      issued_at:
+        type: string
+      number:
+        type: string
+    type: object
+  domain.DriverStatus:
+    enum:
+    - ACTIVE
+    - INACTIVE
+    type: string
+    x-enum-varnames:
+    - DriverStatusActive
+    - DriverStatusInactive
+  domain.LicenseClass:
+    enum:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - B
+    - C
+    - D
+    - E
+    type: string
+    x-enum-varnames:
+    - LicenseClassA1
+    - LicenseClassA2
+    - LicenseClassA3
+    - LicenseClassA4
+    - LicenseClassA5
+    - LicenseClassB
+    - LicenseClassC
+    - LicenseClassD
+    - LicenseClassE
+  domain.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  domain.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/domain.User'
+    type: object
+  domain.Payment:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      currency:
+        type: string
+      gateway:
+        $ref: '#/definitions/domain.PaymentGateway'
+      id:
+        type: string
+      payload:
+        additionalProperties: true
+        type: object
+      reservation:
+        allOf:
+        - $ref: '#/definitions/domain.Reservation'
+        description: Related data
+      reservation_id:
+        type: string
+      status:
+        $ref: '#/definitions/domain.PaymentStatus'
+      transaction_ref:
+        type: string
+    type: object
+  domain.PaymentGateway:
+    enum:
+    - WEBPAY_PLUS
+    type: string
+    x-enum-varnames:
+    - PaymentGatewayWebpayPlus
+  domain.PaymentStatus:
+    enum:
+    - APPROVED
+    - REJECTED
+    - PENDING
+    type: string
+    x-enum-varnames:
+    - PaymentStatusApproved
+    - PaymentStatusRejected
+    - PaymentStatusPending
+  domain.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  domain.RefreshTokenResponse:
+    properties:
+      access_token:
+        type: string
+    type: object
+  domain.Reservation:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      datetime:
+        type: string
+      destination:
+        type: string
+      feedback:
+        items:
+          $ref: '#/definitions/domain.DriverFeedback'
+        type: array
+      id:
+        description: e.g., RSV-1042
+        type: string
+      notes:
+        type: string
+      org_id:
+        type: string
+      passengers:
+        type: integer
+      payments:
+        items:
+          $ref: '#/definitions/domain.Payment'
+        type: array
+      pickup:
+        type: string
+      status:
+        $ref: '#/definitions/domain.ReservationStatus'
+      timeline:
+        items:
+          $ref: '#/definitions/domain.TimelineEvent'
+        type: array
+      updated_at:
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/domain.User'
+        description: Related data
+      user_id:
+        type: string
+    type: object
+  domain.ReservationStatus:
+    enum:
+    - ACTIVA
+    - PROGRAMADA
+    - COMPLETADA
+    - CANCELADA
+    type: string
+    x-enum-varnames:
+    - ReservationStatusActiva
+    - ReservationStatusProgramada
+    - ReservationStatusCompletada
+    - ReservationStatusCancelada
+  domain.SimulatePaymentRequest:
+    properties:
+      result:
+        allOf:
+        - $ref: '#/definitions/domain.PaymentStatus'
+        enum:
+        - APPROVED
+        - REJECTED
+    required:
+    - result
+    type: object
+  domain.TimeRange:
+    properties:
+      from:
+        type: string
+      to:
+        type: string
+    type: object
+  domain.TimelineEvent:
+    properties:
+      at:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      reservation_id:
+        type: string
+      title:
+        type: string
+      variant:
+        type: string
+    type: object
+  domain.UpdateDriverRequest:
+    properties:
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      last_name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      phone:
+        maxLength: 50
+        minLength: 8
+        type: string
+      photo_url:
+        type: string
+      rut_or_dni:
+        maxLength: 50
+        minLength: 8
+        type: string
+      status:
+        $ref: '#/definitions/domain.DriverStatus'
+    type: object
+  domain.UpdateReservationRequest:
+    properties:
+      amount:
+        type: number
+      datetime:
+        type: string
+      destination:
+        maxLength: 500
+        minLength: 5
+        type: string
+      notes:
+        maxLength: 1000
+        type: string
+      passengers:
+        minimum: 1
+        type: integer
+      pickup:
+        maxLength: 500
+        minLength: 5
+        type: string
+    type: object
+  domain.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      org_id:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      role:
+        $ref: '#/definitions/domain.UserRole'
+      status:
+        $ref: '#/definitions/domain.UserStatus'
+    type: object
+  domain.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      org_id:
+        type: string
+      role:
+        $ref: '#/definitions/domain.UserRole'
+      status:
+        $ref: '#/definitions/domain.UserStatus'
+      updated_at:
+        type: string
+    type: object
+  domain.UserRole:
+    enum:
+    - ADMIN
+    - USER
+    - DRIVER
+    - COMPANY
+    type: string
+    x-enum-varnames:
+    - UserRoleAdmin
+    - UserRoleUser
+    - UserRoleDriver
+    - UserRoleCompany
+  domain.UserStatus:
+    enum:
+    - ACTIVE
+    - BLOCKED
+    type: string
+    x-enum-varnames:
+    - UserStatusActive
+    - UserStatusBlocked
+  domain.Vehicle:
+    properties:
+      brand:
+        type: string
+      color:
+        type: string
+      created_at:
+        type: string
+      driver_id:
+        type: string
+      id:
+        type: string
+      inspection_expires_at:
+        type: string
+      insurance_expires_at:
+        type: string
+      insurance_policy:
+        type: string
+      model:
+        type: string
+      photos:
+        items:
+          type: string
+        type: array
+      plate:
+        type: string
+      type:
+        $ref: '#/definitions/domain.VehicleType'
+      updated_at:
+        type: string
+      vin:
+        type: string
+      year:
+        type: integer
+    type: object
+  domain.VehicleType:
+    enum:
+    - BUS
+    - VAN
+    - SEDAN
+    - SUV
+    type: string
+    x-enum-varnames:
+    - VehicleTypeBus
+    - VehicleTypeVan
+    - VehicleTypeSedan
+    - VehicleTypeSUV
+  handler.CreateReservationRequest:
+    properties:
+      datetime:
+        type: string
+      destination:
+        maxLength: 500
+        minLength: 5
+        type: string
+      has_special_language:
+        type: boolean
+      notes:
+        maxLength: 1000
+        type: string
+      org_id:
+        type: string
+      passengers:
+        minimum: 1
+        type: integer
+      pickup:
+        maxLength: 500
+        minLength: 5
+        type: string
+      stops:
+        minimum: 0
+        type: integer
+      user_id:
+        type: string
+      vehicle_type:
+        $ref: '#/definitions/domain.VehicleType'
+    required:
+    - datetime
+    - destination
+    - passengers
+    - pickup
+    - vehicle_type
+    type: object
+  handler.ErrorResponse:
+    properties:
+      details:
+        type: string
+      error:
+        type: string
+    type: object
+  handler.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  handler.PaginatedResponse:
+    properties:
+      data: {}
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@turivo.com
+    name: API Support
+    url: http://www.turivo.com/support
+  description: API backend for Turivo transportation management system
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Turivo Backend API
+  version: "1.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: User login
+      tags:
+      - auth
+  /api/v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Invalidate refresh token
+      parameters:
+      - description: Refresh token to invalidate
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: User logout
+      tags:
+      - auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Get a new access token using refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.RefreshTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
+  /api/v1/drivers:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of drivers
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Filter by status
+        enum:
+        - ACTIVE
+        - INACTIVE
+        in: query
+        name: status
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Sort by field
+        enum:
+        - name
+        - id
+        - created_at
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.Driver'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List drivers
+      tags:
+      - drivers
+    post:
+      consumes:
+      - application/json
+      description: Create a new driver
+      parameters:
+      - description: Driver data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateDriverRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Driver'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create driver
+      tags:
+      - drivers
+  /api/v1/drivers/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete driver by ID
+      parameters:
+      - description: Driver ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete driver
+      tags:
+      - drivers
+    get:
+      consumes:
+      - application/json
+      description: Get driver by ID
+      parameters:
+      - description: Driver ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Driver'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get driver
+      tags:
+      - drivers
+    patch:
+      consumes:
+      - application/json
+      description: Update driver by ID
+      parameters:
+      - description: Driver ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Driver data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateDriverRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Driver'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update driver
+      tags:
+      - drivers
+  /api/v1/drivers/{id}/kpis:
+    get:
+      consumes:
+      - application/json
+      description: Get driver key performance indicators
+      parameters:
+      - description: Driver ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.DriverKPIs'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get driver KPIs
+      tags:
+      - drivers
+  /api/v1/payments:
+    post:
+      consumes:
+      - application/json
+      description: Create a new payment for a reservation
+      parameters:
+      - description: Payment data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Payment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create payment
+      tags:
+      - payments
+  /api/v1/payments/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get payment by ID
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Payment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get payment
+      tags:
+      - payments
+  /api/v1/payments/{id}/simulate:
+    post:
+      consumes:
+      - application/json
+      description: Simulate payment approval or rejection (for testing)
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Simulation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SimulatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Payment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Simulate payment result
+      tags:
+      - payments
+  /api/v1/reservations:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of reservations
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Filter by status
+        enum:
+        - ACTIVA
+        - PROGRAMADA
+        - COMPLETADA
+        - CANCELADA
+        in: query
+        name: status
+        type: string
+      - description: Filter from date (RFC3339)
+        in: query
+        name: from
+        type: string
+      - description: Filter to date (RFC3339)
+        in: query
+        name: to
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Sort by field
+        enum:
+        - datetime
+        - created_at
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.Reservation'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List reservations
+      tags:
+      - reservations
+    post:
+      consumes:
+      - application/json
+      description: Create a new reservation with automatic price calculation
+      parameters:
+      - description: Reservation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateReservationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Reservation'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create reservation
+      tags:
+      - reservations
+  /api/v1/reservations/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get reservation by ID
+      parameters:
+      - description: Reservation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Reservation'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get reservation
+      tags:
+      - reservations
+    patch:
+      consumes:
+      - application/json
+      description: Update reservation by ID
+      parameters:
+      - description: Reservation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Reservation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateReservationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Reservation'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update reservation
+      tags:
+      - reservations
+  /api/v1/reservations/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Change the status of a reservation
+      parameters:
+      - description: Reservation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status change data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ChangeReservationStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Reservation'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change reservation status
+      tags:
+      - reservations
+  /api/v1/reservations/{id}/timeline:
+    get:
+      consumes:
+      - application/json
+      description: Get timeline events for a reservation
+      parameters:
+      - description: Reservation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.TimelineEvent'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get reservation timeline
+      tags:
+      - reservations
+    post:
+      consumes:
+      - application/json
+      description: Add a new event to reservation timeline
+      parameters:
+      - description: Reservation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Timeline event data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateTimelineEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Add timeline event
+      tags:
+      - reservations
+  /api/v1/users:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of users
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Filter by role
+        enum:
+        - ADMIN
+        - USER
+        - DRIVER
+        - COMPANY
+        in: query
+        name: role
+        type: string
+      - description: Filter by status
+        enum:
+        - ACTIVE
+        - BLOCKED
+        in: query
+        name: status
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Sort by field
+        enum:
+        - name
+        - email
+        - created_at
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.User'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user
+      parameters:
+      - description: User data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create user
+      tags:
+      - users
+  /api/v1/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Get user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Update user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user
+      tags:
+      - users
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

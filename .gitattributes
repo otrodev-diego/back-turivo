@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.sh eol=lf
+*.ps1 eol=crlf
+*.bat eol=crlf
+*.go linguist-language=Go
+
