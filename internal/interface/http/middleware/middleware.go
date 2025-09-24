@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -74,11 +75,16 @@ func CORS(origins string) gin.HandlerFunc {
 	if origins == "*" {
 		config.AllowAllOrigins = true
 	} else {
-		config.AllowOrigins = []string{origins}
+		// Support multiple origins separated by commas
+		originList := strings.Split(origins, ",")
+		for i, origin := range originList {
+			originList[i] = strings.TrimSpace(origin)
+		}
+		config.AllowOrigins = originList
 	}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-Request-ID"}
 	config.ExposeHeaders = []string{"X-Request-ID"}
+	config.AllowCredentials = true
 	return cors.New(config)
 }
-

@@ -61,7 +61,7 @@ func Load() (*Config, error) {
 	viper.SetDefault("HTTP_PORT", "3000")
 	viper.SetDefault("ENV", "local")
 	viper.SetDefault("LOG_LEVEL", "info")
-	viper.SetDefault("CORS_ORIGINS", "http://localhost:8080")
+	viper.SetDefault("CORS_ORIGINS", "http://localhost:8080,https://turivo-flow.vercel.app")
 	viper.SetDefault("DB_HOST", "localhost")
 	viper.SetDefault("DB_PORT", "5432")
 	viper.SetDefault("DB_USER", "turivo")

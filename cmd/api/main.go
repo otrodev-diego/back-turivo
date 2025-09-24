@@ -145,7 +145,7 @@ func main() {
 	ginRouter.Use(middleware.RequestID())
 	ginRouter.Use(middleware.Logger(logger))
 	ginRouter.Use(middleware.Recovery(logger))
-	ginRouter.Use(middleware.CORS("http://localhost:8080")) // Allow frontend origin
+	ginRouter.Use(middleware.CORS(cfg.CORS.Origins)) // Use configured CORS origins
 
 	// Health check endpoint
 	ginRouter.GET("/healthz", func(c *gin.Context) {
