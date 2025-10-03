@@ -45,11 +45,18 @@ func (r *RegistrationTokenRepository) Create(token *domain.RegistrationToken) er
 		r.logger.Info("ℹ️ No org_id provided")
 	}
 
+	var companyProfile *string
+	if token.CompanyProfile != nil {
+		profile := string(*token.CompanyProfile)
+		companyProfile = &profile
+		r.logger.Info("👔 company_profile provided", zap.String("company_profile", profile))
+	}
+
 	// Since we don't have SQLC queries for registration tokens yet,
 	// we'll use raw SQL for now
 	query := `
-		INSERT INTO registration_tokens (id, token, email, org_id, role, expires_at, used, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO registration_tokens (id, token, email, org_id, role, company_profile, expires_at, used, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
 	r.logger.Info("📝 Executing SQL query", zap.String("query", query))
@@ -60,6 +67,7 @@ func (r *RegistrationTokenRepository) Create(token *domain.RegistrationToken) er
 		token.Email,
 		orgID,
 		string(token.Role),
+		companyProfile,
 		time.Unix(token.ExpiresAt, 0),
 		token.Used,
 		time.Unix(token.CreatedAt, 0),
@@ -85,13 +93,14 @@ func (r *RegistrationTokenRepository) GetByToken(tokenStr string) (*domain.Regis
 	ctx := context.Background()
 
 	query := `
-		SELECT id, token, email, org_id, role, expires_at, used, created_at
+		SELECT id, token, email, org_id, role, company_profile, expires_at, used, created_at
 		FROM registration_tokens
 		WHERE token = $1
 	`
 
 	var token domain.RegistrationToken
 	var orgID pgtype.UUID
+	var companyProfile *string
 	var expiresAt, createdAt time.Time
 
 	err := r.db.QueryRowContext(ctx, query, tokenStr).Scan(
@@ -100,6 +109,7 @@ func (r *RegistrationTokenRepository) GetByToken(tokenStr string) (*domain.Regis
 		&token.Email,
 		&orgID,
 		&token.Role,
+		&companyProfile,
 		&expiresAt,
 		&token.Used,
 		&createdAt,
@@ -116,6 +126,11 @@ func (r *RegistrationTokenRepository) GetByToken(tokenStr string) (*domain.Regis
 	if orgID.Valid {
 		orgUUID := uuid.UUID(orgID.Bytes)
 		token.OrgID = &orgUUID
+	}
+
+	if companyProfile != nil && *companyProfile != "" {
+		profile := domain.CompanyProfile(*companyProfile)
+		token.CompanyProfile = &profile
 	}
 
 	token.ExpiresAt = expiresAt.Unix()

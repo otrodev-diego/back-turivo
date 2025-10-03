@@ -16,6 +16,7 @@ var (
 	ErrUserAlreadyExists  = errors.New("user already exists")
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrUserBlocked        = errors.New("user is blocked")
+	ErrMaxUsersReached    = errors.New("maximum number of users reached for this organization")
 
 	// Company specific errors
 	ErrCompanyNotFound      = errors.New("company not found")

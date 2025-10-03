@@ -110,6 +110,7 @@ func main() {
 	paymentRepo := repository.NewPaymentRepository(dbPool)
 	registrationTokenRepo := repository.NewRegistrationTokenRepository(sqlDB, logger)
 	companyRepo := repository.NewCompanyRepository(sqlDB, logger)
+	vehicleRepo := repository.NewVehicleRepository(sqlDB, logger)
 
 	// Initialize use cases
 	authUseCase := usecase.NewAuthUseCase(userRepo, refreshTokenRepo, passwordService, cfg.JWT.Secret, 15*time.Minute, 7*24*time.Hour, logger)
@@ -118,6 +119,7 @@ func main() {
 	reservationUseCase := usecase.NewReservationUseCase(reservationRepo, userRepo, emailService, logger)
 	paymentUseCase := usecase.NewPaymentUseCase(paymentRepo, reservationRepo, paymentGateway, logger)
 	companyUseCase := usecase.NewCompanyUseCase(companyRepo, logger)
+	vehicleUseCase := usecase.NewVehicleUseCase(vehicleRepo, driverRepo, logger)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authUseCase, validate, logger)
@@ -126,6 +128,7 @@ func main() {
 	reservationHandler := handler.NewReservationHandler(reservationUseCase, validate, logger)
 	paymentHandler := handler.NewPaymentHandler(paymentUseCase, validate, logger)
 	companyHandler := handler.NewCompanyHandler(companyUseCase, validate, logger)
+	vehicleHandler := handler.NewVehicleHandler(vehicleUseCase, validate, logger)
 	supportHandler := handler.NewSupportHandler(emailService, userRepo, validate, logger)
 
 	// Initialize middleware
@@ -167,6 +170,7 @@ func main() {
 		Reservation: reservationHandler,
 		Payment:     paymentHandler,
 		Company:     companyHandler,
+		Vehicle:     vehicleHandler,
 		Support:     supportHandler,
 	}, authMiddleware)
 

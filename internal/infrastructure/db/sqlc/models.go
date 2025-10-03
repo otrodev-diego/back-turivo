@@ -533,6 +533,50 @@ func (ns NullUserStatus) Value() (driver.Value, error) {
 	return string(ns.UserStatus), nil
 }
 
+type VehicleStatus string
+
+const (
+	VehicleStatusAVAILABLE   VehicleStatus = "AVAILABLE"
+	VehicleStatusASSIGNED    VehicleStatus = "ASSIGNED"
+	VehicleStatusMAINTENANCE VehicleStatus = "MAINTENANCE"
+	VehicleStatusINACTIVE    VehicleStatus = "INACTIVE"
+)
+
+func (e *VehicleStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = VehicleStatus(s)
+	case string:
+		*e = VehicleStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for VehicleStatus: %T", src)
+	}
+	return nil
+}
+
+type NullVehicleStatus struct {
+	VehicleStatus VehicleStatus `json:"vehicle_status"`
+	Valid         bool          `json:"valid"` // Valid is true if VehicleStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullVehicleStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.VehicleStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.VehicleStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullVehicleStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.VehicleStatus), nil
+}
+
 type VehicleType string
 
 const (
@@ -727,6 +771,8 @@ type User struct {
 	OrgID        pgtype.UUID        `json:"org_id"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	// Profile type for COMPANY role users. Valid values: COMPANY_ADMIN (full access), COMPANY_USER (limited access)
+	CompanyProfile *string `json:"company_profile"`
 }
 
 type Vehicle struct {
@@ -744,6 +790,8 @@ type Vehicle struct {
 	InspectionExpiresAt pgtype.Date        `json:"inspection_expires_at"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	Status              VehicleStatus      `json:"status"`
+	Capacity            *int32             `json:"capacity"`
 }
 
 type VehiclePhoto struct {

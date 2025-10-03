@@ -22,33 +22,43 @@ const (
 	UserStatusBlocked UserStatus = "BLOCKED"
 )
 
+type CompanyProfile string
+
+const (
+	CompanyProfileAdmin CompanyProfile = "COMPANY_ADMIN"
+	CompanyProfileUser  CompanyProfile = "COMPANY_USER"
+)
+
 type User struct {
-	ID           uuid.UUID  `json:"id"`
-	Name         string     `json:"name"`
-	Email        string     `json:"email"`
-	PasswordHash string     `json:"-"`
-	Role         UserRole   `json:"role"`
-	Status       UserStatus `json:"status"`
-	OrgID        *uuid.UUID `json:"org_id,omitempty"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
+	ID             uuid.UUID       `json:"id"`
+	Name           string          `json:"name"`
+	Email          string          `json:"email"`
+	PasswordHash   string          `json:"-"`
+	Role           UserRole        `json:"role"`
+	Status         UserStatus      `json:"status"`
+	OrgID          *uuid.UUID      `json:"org_id,omitempty"`
+	CompanyProfile *CompanyProfile `json:"company_profile,omitempty"`
+	CreatedAt      time.Time       `json:"created_at"`
+	UpdatedAt      time.Time       `json:"updated_at"`
 }
 
 type CreateUserRequest struct {
-	Name     string     `json:"name" validate:"required,min=2,max=255"`
-	Email    string     `json:"email" validate:"required,email"`
-	Password string     `json:"password" validate:"required,min=8"`
-	Role     UserRole   `json:"role" validate:"required"`
-	OrgID    *uuid.UUID `json:"org_id,omitempty"`
+	Name           string          `json:"name" validate:"required,min=2,max=255"`
+	Email          string          `json:"email" validate:"required,email"`
+	Password       string          `json:"password" validate:"required,min=8"`
+	Role           UserRole        `json:"role" validate:"required"`
+	OrgID          *uuid.UUID      `json:"org_id,omitempty"`
+	CompanyProfile *CompanyProfile `json:"company_profile,omitempty"`
 }
 
 type UpdateUserRequest struct {
-	Name     *string     `json:"name,omitempty" validate:"omitempty,min=2,max=255"`
-	Email    *string     `json:"email,omitempty" validate:"omitempty,email"`
-	Password *string     `json:"password,omitempty" validate:"omitempty,min=8"`
-	Role     *UserRole   `json:"role,omitempty"`
-	Status   *UserStatus `json:"status,omitempty"`
-	OrgID    *uuid.UUID  `json:"org_id,omitempty"`
+	Name           *string          `json:"name,omitempty" validate:"omitempty,min=2,max=255"`
+	Email          *string          `json:"email,omitempty" validate:"omitempty,email"`
+	Password       *string          `json:"password,omitempty" validate:"omitempty,min=8"`
+	Role           *UserRole        `json:"role,omitempty"`
+	Status         *UserStatus      `json:"status,omitempty"`
+	OrgID          *uuid.UUID       `json:"org_id,omitempty"`
+	CompanyProfile *CompanyProfile  `json:"company_profile,omitempty"`
 }
 
 type ListUsersRequest struct {

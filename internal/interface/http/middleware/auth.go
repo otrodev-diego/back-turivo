@@ -63,12 +63,16 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 		c.Set("user_id", claims.UserID)
 		c.Set("user_role", claims.Role)
 		c.Set("org_id", claims.OrgID)
+		if claims.CompanyProfile != nil {
+			c.Set("company_profile", string(*claims.CompanyProfile))
+		}
 		c.Set("claims", claims)
 		
 		m.logger.Info("User authenticated and claims set",
 			zap.String("user_id", claims.UserID.String()),
 			zap.String("user_role", string(claims.Role)),
-			zap.Any("org_id", claims.OrgID))
+			zap.Any("org_id", claims.OrgID),
+			zap.Any("company_profile", claims.CompanyProfile))
 
 		c.Next()
 	}

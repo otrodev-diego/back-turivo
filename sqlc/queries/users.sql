@@ -1,6 +1,6 @@
 -- name: CreateUser :one
-INSERT INTO users (name, email, password_hash, role, org_id)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users (name, email, password_hash, role, org_id, company_profile)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: GetUserByID :one
@@ -34,6 +34,7 @@ SET name = COALESCE($2, name),
     role = COALESCE($5, role),
     status = COALESCE($6, status),
     org_id = COALESCE($7, org_id),
+    company_profile = COALESCE($8, company_profile),
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;

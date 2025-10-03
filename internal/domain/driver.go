@@ -93,24 +93,6 @@ type DriverAvailability struct {
 	UpdatedAt  time.Time   `json:"updated_at"`
 }
 
-type Vehicle struct {
-	ID                  string      `json:"id"`
-	DriverID            *string     `json:"driver_id,omitempty"`
-	Type                VehicleType `json:"type"`
-	Brand               string      `json:"brand"`
-	Model               string      `json:"model"`
-	Year                *int        `json:"year,omitempty"`
-	Plate               *string     `json:"plate,omitempty"`
-	VIN                 *string     `json:"vin,omitempty"`
-	Color               *string     `json:"color,omitempty"`
-	InsurancePolicy     *string     `json:"insurance_policy,omitempty"`
-	InsuranceExpiresAt  *time.Time  `json:"insurance_expires_at,omitempty"`
-	InspectionExpiresAt *time.Time  `json:"inspection_expires_at,omitempty"`
-	Photos              []string    `json:"photos,omitempty"`
-	CreatedAt           time.Time   `json:"created_at"`
-	UpdatedAt           time.Time   `json:"updated_at"`
-}
-
 type DriverKPIs struct {
 	TotalTrips    int     `json:"total_trips"`
 	TotalKM       float64 `json:"total_km"`

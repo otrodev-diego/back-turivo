@@ -564,11 +564,150 @@ func (h *UserHandler) ValidateRegistrationToken(c *gin.Context) {
 	c.JSON(http.StatusOK, regToken)
 }
 
+// InviteCompanyUser godoc
+// @Summary Invite a company user
+// @Description Company admins can invite new users to their organization (max 5 users)
+// @Tags company
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body InviteCompanyUserRequest true "Invitation data"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/company/users/invite [post]
+func (h *UserHandler) InviteCompanyUser(c *gin.Context) {
+	// Get authenticated user info
+	userIDRaw, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error: "Unauthorized",
+		})
+		return
+	}
+
+	userRoleRaw, exists := c.Get("user_role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error: "User role not found",
+		})
+		return
+	}
+
+	var userRole domain.UserRole
+	switch v := userRoleRaw.(type) {
+	case domain.UserRole:
+		userRole = v
+	case string:
+		userRole = domain.UserRole(v)
+	default:
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "Invalid user role type",
+		})
+		return
+	}
+
+	if userRole != domain.UserRoleCompany {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error: "Only company users can invite other users",
+		})
+		return
+	}
+
+	orgIDRaw, exists := c.Get("org_id")
+	if !exists {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error: "User must belong to an organization",
+		})
+		return
+	}
+
+	// Check if user is COMPANY_ADMIN (or has no profile set, for retrocompatibility)
+	companyProfile, _ := c.Get("company_profile")
+	if companyProfile != "" && companyProfile != string(domain.CompanyProfileAdmin) {
+		c.JSON(http.StatusForbidden, ErrorResponse{
+			Error: "Only company administrators can invite users",
+		})
+		return
+	}
+
+	// Parse org_id
+	orgUUID, err := uuid.Parse(fmt.Sprint(orgIDRaw))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "Invalid organization ID",
+		})
+		return
+	}
+
+	var req InviteCompanyUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "Invalid request",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	h.logger.Info("Company user invitation request",
+		zap.String("inviter_id", fmt.Sprint(userIDRaw)),
+		zap.String("email", req.Email),
+		zap.String("company_profile", req.CompanyProfile),
+		zap.String("org_id", orgUUID.String()),
+	)
+
+	// Convert company_profile string to domain type
+	profile := domain.CompanyProfile(req.CompanyProfile)
+
+	// Call usecase
+	err = h.userUseCase.CreateUserWithInvitationAndProfile(
+		req.Email,
+		domain.UserRoleCompany,
+		&orgUUID,
+		&profile,
+	)
+
+	if err != nil {
+		switch err {
+		case domain.ErrUserAlreadyExists:
+			h.logger.Warn("User already exists", zap.String("email", req.Email))
+			c.JSON(http.StatusConflict, ErrorResponse{
+				Error: "User already exists",
+			})
+		case domain.ErrMaxUsersReached:
+			h.logger.Warn("Maximum users reached", zap.String("org_id", orgUUID.String()))
+			c.JSON(http.StatusForbidden, ErrorResponse{
+				Error: "Maximum number of users reached (5)",
+			})
+		default:
+			h.logger.Error("Failed to invite company user", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error:   "Internal server error",
+				Details: err.Error(),
+			})
+		}
+		return
+	}
+
+	h.logger.Info("Company user invitation sent successfully", zap.String("email", req.Email))
+	c.JSON(http.StatusOK, MessageResponse{
+		Message: "Invitation sent successfully",
+	})
+}
+
 // Request structures
 type CreateUserInvitationRequest struct {
 	Email string `json:"email" validate:"required,email"`
 	Role  string `json:"role" validate:"required,oneof=ADMIN USER DRIVER COMPANY"`
 	OrgID string `json:"org_id,omitempty"`
+}
+
+type InviteCompanyUserRequest struct {
+	Email          string `json:"email" binding:"required,email"`
+	CompanyProfile string `json:"company_profile" binding:"required,oneof=COMPANY_ADMIN COMPANY_USER"`
 }
 
 // Common response structures

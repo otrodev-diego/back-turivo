@@ -27,11 +27,12 @@ type RefreshTokenResponse struct {
 }
 
 type JWTClaims struct {
-	UserID uuid.UUID  `json:"sub"`
-	Role   UserRole   `json:"role"`
-	OrgID  *uuid.UUID `json:"org_id,omitempty"`
-	Exp    int64      `json:"exp"`
-	Iat    int64      `json:"iat"`
+	UserID         uuid.UUID       `json:"sub"`
+	Role           UserRole        `json:"role"`
+	OrgID          *uuid.UUID      `json:"org_id,omitempty"`
+	CompanyProfile *CompanyProfile `json:"company_profile,omitempty"`
+	Exp            int64           `json:"exp"`
+	Iat            int64           `json:"iat"`
 }
 
 // Implement jwt.Claims interface

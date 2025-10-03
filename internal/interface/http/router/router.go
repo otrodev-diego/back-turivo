@@ -14,6 +14,7 @@ type RouteHandlers struct {
 	Reservation *handler.ReservationHandler
 	Payment     *handler.PaymentHandler
 	Company     *handler.CompanyHandler
+	Vehicle     *handler.VehicleHandler
 	Support     *handler.SupportHandler
 }
 
@@ -109,12 +110,33 @@ func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *mid
 				adminCompanies.DELETE("/:id", handlers.Company.DeleteCompany)
 			}
 
+			// Vehicles routes (Admin and Company)
+			if handlers.Vehicle != nil {
+				vehicles := protected.Group("/vehicles")
+				vehicles.Use(authMiddleware.RequireRole("ADMIN", "COMPANY"))
+				{
+					vehicles.GET("", handlers.Vehicle.ListVehicles)
+					vehicles.GET("/:id", handlers.Vehicle.GetVehicle)
+					vehicles.POST("", handlers.Vehicle.CreateVehicle)
+					vehicles.PUT("/:id", handlers.Vehicle.UpdateVehicle)
+					vehicles.DELETE("/:id", handlers.Vehicle.DeleteVehicle)
+					vehicles.POST("/:id/assign", handlers.Vehicle.AssignVehicleToDriver)
+				}
+			}
+
 			// Support routes (All authenticated users)
 			if handlers.Support != nil {
 				support := protected.Group("/support")
 				{
 					support.POST("/contact", handlers.Support.ContactSupport)
 				}
+			}
+
+			// Company user management routes (Company admins only)
+			companyUsers := protected.Group("/company/users")
+			companyUsers.Use(authMiddleware.RequireRole("COMPANY"))
+			{
+				companyUsers.POST("/invite", handlers.User.InviteCompanyUser)
 			}
 		}
 	}

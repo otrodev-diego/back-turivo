@@ -194,10 +194,15 @@ func (uc *UserUseCase) DeleteUser(id uuid.UUID) error {
 
 // CreateUserWithInvitation creates a user and sends a welcome email with registration token
 func (uc *UserUseCase) CreateUserWithInvitation(email string, role domain.UserRole, orgID *uuid.UUID) error {
-	uc.logger.Info("🔵 === CreateUserWithInvitation UseCase Started ===", 
+	return uc.CreateUserWithInvitationAndProfile(email, role, orgID, nil)
+}
+
+func (uc *UserUseCase) CreateUserWithInvitationAndProfile(email string, role domain.UserRole, orgID *uuid.UUID, companyProfile *domain.CompanyProfile) error {
+	uc.logger.Info("🔵 === CreateUserWithInvitationAndProfile UseCase Started ===", 
 		zap.String("email", email),
 		zap.String("role", string(role)),
 		zap.Bool("has_org_id", orgID != nil),
+		zap.Bool("has_company_profile", companyProfile != nil),
 	)
 
 	// Check if user already exists
@@ -213,6 +218,34 @@ func (uc *UserUseCase) CreateUserWithInvitation(email string, role domain.UserRo
 	}
 	uc.logger.Info("✅ User doesn't exist, proceeding", zap.String("email", email))
 
+	// If this is a COMPANY user, check the limit of 5 users per organization
+	if role == domain.UserRoleCompany && orgID != nil {
+		uc.logger.Info("👔 Checking company user limit for org", zap.String("org_id", orgID.String()))
+		req := domain.ListUsersRequest{
+			Role:     &role,
+			OrgID:    orgID,
+			Page:     1,
+			PageSize: 100,
+		}
+		existingUsers, _, err := uc.userRepo.List(req)
+		if err != nil {
+			uc.logger.Error("❌ FAILED to list users", zap.Error(err))
+			return domain.ErrInternalError
+		}
+		
+		if len(existingUsers) >= 5 {
+			uc.logger.Warn("⚠️ Company has reached the limit of 5 users", 
+				zap.String("org_id", orgID.String()),
+				zap.Int("current_users", len(existingUsers)),
+			)
+			return domain.ErrMaxUsersReached
+		}
+		uc.logger.Info("✅ Company user limit check passed", 
+			zap.Int("current_users", len(existingUsers)),
+			zap.Int("limit", 5),
+		)
+	}
+
 	// Generate registration token
 	uc.logger.Info("🔑 Generating registration token")
 	token, err := uc.generateRegistrationToken()
@@ -225,14 +258,15 @@ func (uc *UserUseCase) CreateUserWithInvitation(email string, role domain.UserRo
 	// Create registration token record
 	uc.logger.Info("💾 Creating registration token record in database")
 	registrationToken := &domain.RegistrationToken{
-		ID:        uuid.New(),
-		Token:     token,
-		Email:     email,
-		OrgID:     orgID,
-		Role:      role,
-		ExpiresAt: time.Now().Add(24 * time.Hour).Unix(), // 24 hours expiration
-		Used:      false,
-		CreatedAt: time.Now().Unix(),
+		ID:             uuid.New(),
+		Token:          token,
+		Email:          email,
+		OrgID:          orgID,
+		Role:           role,
+		CompanyProfile: companyProfile,
+		ExpiresAt:      time.Now().Add(24 * time.Hour).Unix(), // 24 hours expiration
+		Used:           false,
+		CreatedAt:      time.Now().Unix(),
 	}
 
 	if err := uc.registrationTokenRepo.Create(registrationToken); err != nil {
@@ -308,15 +342,16 @@ func (uc *UserUseCase) CompleteRegistration(req domain.CompleteRegistrationReque
 
 	// Create user
 	user := &domain.User{
-		ID:           uuid.New(),
-		Name:         req.Name,
-		Email:        regToken.Email,
-		PasswordHash: hashedPassword,
-		Role:         regToken.Role,
-		Status:       domain.UserStatusActive,
-		OrgID:        regToken.OrgID,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		ID:             uuid.New(),
+		Name:           req.Name,
+		Email:          regToken.Email,
+		PasswordHash:   hashedPassword,
+		Role:           regToken.Role,
+		Status:         domain.UserStatusActive,
+		OrgID:          regToken.OrgID,
+		CompanyProfile: regToken.CompanyProfile,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 
 	if err := uc.userRepo.Create(user); err != nil {

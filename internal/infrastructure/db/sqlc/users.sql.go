@@ -32,17 +32,18 @@ func (q *Queries) CountUsers(ctx context.Context, arg CountUsersParams) (int64, 
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (name, email, password_hash, role, org_id)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, name, email, password_hash, role, status, org_id, created_at, updated_at
+INSERT INTO users (name, email, password_hash, role, org_id, company_profile)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, name, email, password_hash, role, status, org_id, created_at, updated_at, company_profile
 `
 
 type CreateUserParams struct {
-	Name         string      `json:"name"`
-	Email        string      `json:"email"`
-	PasswordHash string      `json:"password_hash"`
-	Role         UserRole    `json:"role"`
-	OrgID        pgtype.UUID `json:"org_id"`
+	Name           string      `json:"name"`
+	Email          string      `json:"email"`
+	PasswordHash   string      `json:"password_hash"`
+	Role           UserRole    `json:"role"`
+	OrgID          pgtype.UUID `json:"org_id"`
+	CompanyProfile *string     `json:"company_profile"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -52,6 +53,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.PasswordHash,
 		arg.Role,
 		arg.OrgID,
+		arg.CompanyProfile,
 	)
 	var i User
 	err := row.Scan(
@@ -64,6 +66,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.OrgID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompanyProfile,
 	)
 	return i, err
 }
@@ -78,7 +81,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, password_hash, role, status, org_id, created_at, updated_at FROM users WHERE email = $1
+SELECT id, name, email, password_hash, role, status, org_id, created_at, updated_at, company_profile FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -94,12 +97,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.OrgID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompanyProfile,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, password_hash, role, status, org_id, created_at, updated_at FROM users WHERE id = $1
+SELECT id, name, email, password_hash, role, status, org_id, created_at, updated_at, company_profile FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error) {
@@ -115,12 +119,13 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 		&i.OrgID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompanyProfile,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, name, email, password_hash, role, status, org_id, created_at, updated_at FROM users
+SELECT id, name, email, password_hash, role, status, org_id, created_at, updated_at, company_profile FROM users
 WHERE ($1::text IS NULL OR name ILIKE '%' || $1 || '%' OR email ILIKE '%' || $1 || '%')
   AND ($2::user_role IS NULL OR role = $2)
   AND ($3::user_status IS NULL OR status = $3)
@@ -166,6 +171,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.OrgID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CompanyProfile,
 		); err != nil {
 			return nil, err
 		}
@@ -185,19 +191,21 @@ SET name = COALESCE($2, name),
     role = COALESCE($5, role),
     status = COALESCE($6, status),
     org_id = COALESCE($7, org_id),
+    company_profile = COALESCE($8, company_profile),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, name, email, password_hash, role, status, org_id, created_at, updated_at
+RETURNING id, name, email, password_hash, role, status, org_id, created_at, updated_at, company_profile
 `
 
 type UpdateUserParams struct {
-	ID           pgtype.UUID `json:"id"`
-	Name         string      `json:"name"`
-	Email        string      `json:"email"`
-	PasswordHash string      `json:"password_hash"`
-	Role         UserRole    `json:"role"`
-	Status       UserStatus  `json:"status"`
-	OrgID        pgtype.UUID `json:"org_id"`
+	ID             pgtype.UUID `json:"id"`
+	Name           string      `json:"name"`
+	Email          string      `json:"email"`
+	PasswordHash   string      `json:"password_hash"`
+	Role           UserRole    `json:"role"`
+	Status         UserStatus  `json:"status"`
+	OrgID          pgtype.UUID `json:"org_id"`
+	CompanyProfile *string     `json:"company_profile"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -209,6 +217,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Role,
 		arg.Status,
 		arg.OrgID,
+		arg.CompanyProfile,
 	)
 	var i User
 	err := row.Scan(
@@ -221,6 +230,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.OrgID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompanyProfile,
 	)
 	return i, err
 }

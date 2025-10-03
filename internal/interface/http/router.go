@@ -11,15 +11,17 @@ import (
 )
 
 type Router struct {
-	authHandler        *handler.AuthHandler
-	userHandler        *handler.UserHandler
-	driverHandler      *handler.DriverHandler
-	reservationHandler *handler.ReservationHandler
-	paymentHandler     *handler.PaymentHandler
-	companyHandler     *handler.CompanyHandler
-	supportHandler     *handler.SupportHandler
-	authMiddleware     *middleware.AuthMiddleware
-	logger             *zap.Logger
+	authHandler            *handler.AuthHandler
+	userHandler            *handler.UserHandler
+	driverHandler          *handler.DriverHandler
+	reservationHandler     *handler.ReservationHandler
+	paymentHandler         *handler.PaymentHandler
+	companyHandler         *handler.CompanyHandler
+	companyUserHandler     *handler.CompanyHandler // Para operaciones de usuarios de empresa
+	vehicleHandler         *handler.VehicleHandler
+	supportHandler         *handler.SupportHandler
+	authMiddleware         *middleware.AuthMiddleware
+	logger                 *zap.Logger
 }
 
 func NewRouter(
@@ -29,6 +31,7 @@ func NewRouter(
 	reservationUseCase *usecase.ReservationUseCase,
 	paymentUseCase *usecase.PaymentUseCase,
 	companyUseCase *usecase.CompanyUseCase,
+	vehicleUseCase domain.VehicleUseCase,
 	authMiddleware *middleware.AuthMiddleware,
 	validator *validator.Validate,
 	logger *zap.Logger,
@@ -40,6 +43,7 @@ func NewRouter(
 		reservationHandler: handler.NewReservationHandler(reservationUseCase, validator, logger),
 		paymentHandler:     handler.NewPaymentHandler(paymentUseCase, validator, logger),
 		companyHandler:     handler.NewCompanyHandler(companyUseCase, validator, logger),
+		vehicleHandler:     handler.NewVehicleHandler(vehicleUseCase, validator, logger),
 		// supportHandler will be initialized in the main app setup
 		authMiddleware: authMiddleware,
 		logger:         logger,
@@ -142,6 +146,18 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 				adminCompanies.POST("", r.companyHandler.CreateCompany)
 				adminCompanies.PUT("/:id", r.companyHandler.UpdateCompany)
 				adminCompanies.DELETE("/:id", r.companyHandler.DeleteCompany)
+			}
+
+			// Vehicles routes (Admin and Company)
+			vehicles := protected.Group("/vehicles")
+			vehicles.Use(r.authMiddleware.RequireRole("ADMIN", "COMPANY"))
+			{
+				vehicles.GET("", r.vehicleHandler.ListVehicles)
+				vehicles.GET("/:id", r.vehicleHandler.GetVehicle)
+				vehicles.POST("", r.vehicleHandler.CreateVehicle)
+				vehicles.PUT("/:id", r.vehicleHandler.UpdateVehicle)
+				vehicles.DELETE("/:id", r.vehicleHandler.DeleteVehicle)
+				vehicles.POST("/:id/assign", r.vehicleHandler.AssignVehicleToDriver)
 			}
 
 			// Support routes (All authenticated users)

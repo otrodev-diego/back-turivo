@@ -33,12 +33,19 @@ func (r *UserRepository) Create(user *domain.User) error {
 		orgID = pgtype.UUID{Bytes: *user.OrgID, Valid: true}
 	}
 
+	var companyProfile *string
+	if user.CompanyProfile != nil {
+		profileStr := string(*user.CompanyProfile)
+		companyProfile = &profileStr
+	}
+
 	dbUser, err := r.queries.CreateUser(ctx, sqlc.CreateUserParams{
-		Name:         user.Name,
-		Email:        user.Email,
-		PasswordHash: user.PasswordHash,
-		Role:         sqlc.UserRole(user.Role),
-		OrgID:        orgID,
+		Name:           user.Name,
+		Email:          user.Email,
+		PasswordHash:   user.PasswordHash,
+		Role:           sqlc.UserRole(user.Role),
+		OrgID:          orgID,
+		CompanyProfile: companyProfile,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
@@ -249,6 +256,11 @@ func (r *UserRepository) mapToDomainUser(dbUser sqlc.User) *domain.User {
 		var orgID uuid.UUID
 		copy(orgID[:], dbUser.OrgID.Bytes[:])
 		user.OrgID = &orgID
+	}
+
+	if dbUser.CompanyProfile != nil && *dbUser.CompanyProfile != "" {
+		profile := domain.CompanyProfile(*dbUser.CompanyProfile)
+		user.CompanyProfile = &profile
 	}
 
 	return user

@@ -49,14 +49,15 @@ type SupportRequest struct {
 
 // Registration token domain
 type RegistrationToken struct {
-	ID        uuid.UUID  `json:"id"`
-	Token     string     `json:"token"`
-	Email     string     `json:"email"`
-	OrgID     *uuid.UUID `json:"org_id,omitempty"`
-	Role      UserRole   `json:"role"`
-	ExpiresAt int64      `json:"expires_at"`
-	Used      bool       `json:"used"`
-	CreatedAt int64      `json:"created_at"`
+	ID             uuid.UUID       `json:"id"`
+	Token          string          `json:"token"`
+	Email          string          `json:"email"`
+	OrgID          *uuid.UUID      `json:"org_id,omitempty"`
+	Role           UserRole        `json:"role"`
+	CompanyProfile *CompanyProfile `json:"company_profile,omitempty"`
+	ExpiresAt      int64           `json:"expires_at"`
+	Used           bool            `json:"used"`
+	CreatedAt      int64           `json:"created_at"`
 }
 
 type RegistrationTokenRepository interface {

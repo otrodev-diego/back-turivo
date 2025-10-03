@@ -181,11 +181,12 @@ func (uc *AuthUseCase) ValidateAccessToken(tokenString string) (*domain.JWTClaim
 func (uc *AuthUseCase) GenerateAccessToken(user *domain.User) (string, error) {
 	now := time.Now()
 	claims := &domain.JWTClaims{
-		UserID: user.ID,
-		Role:   user.Role,
-		OrgID:  user.OrgID,
-		Exp:    now.Add(uc.accessTokenTTL).Unix(),
-		Iat:    now.Unix(),
+		UserID:         user.ID,
+		Role:           user.Role,
+		OrgID:          user.OrgID,
+		CompanyProfile: user.CompanyProfile,
+		Exp:            now.Add(uc.accessTokenTTL).Unix(),
+		Iat:            now.Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
