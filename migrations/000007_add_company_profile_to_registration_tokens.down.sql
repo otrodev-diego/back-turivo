@@ -2,3 +2,4 @@
 ALTER TABLE registration_tokens 
 DROP COLUMN IF EXISTS company_profile;
 
+

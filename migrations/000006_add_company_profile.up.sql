@@ -16,3 +16,4 @@ WHERE role = 'COMPANY' AND company_profile IS NULL;
 -- Create index for filtering by company_profile
 CREATE INDEX idx_users_company_profile ON users(company_profile) WHERE company_profile IS NOT NULL;
 
+
