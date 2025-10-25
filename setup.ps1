@@ -92,6 +92,5 @@ Write-Host "  Health Check: http://localhost:8080/healthz" -ForegroundColor Whit
 Write-Host "  Swagger UI:   http://localhost:8080/swagger/index.html" -ForegroundColor White
 Write-Host ""
 Write-Host "Usuarios demo:" -ForegroundColor Cyan
-Write-Host "  Admin:   admin@turivo.com / password" -ForegroundColor White
-Write-Host "  Company: juan@turivo.com / password" -ForegroundColor White
-Write-Host "  User:    cliente@demo.com / password" -ForegroundColor White
+Write-Host "  Las credenciales por defecto han sido removidas por seguridad" -ForegroundColor Yellow
+Write-Host "  Crea tu primer usuario administrador usando el endpoint de registro" -ForegroundColor Yellow

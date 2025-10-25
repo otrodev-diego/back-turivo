@@ -26,7 +26,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -113,9 +112,9 @@ func main() {
 	vehicleRepo := repository.NewVehicleRepository(sqlDB, logger)
 
 	// Initialize use cases
-	authUseCase := usecase.NewAuthUseCase(userRepo, refreshTokenRepo, passwordService, cfg.JWT.Secret, 15*time.Minute, 7*24*time.Hour, logger)
+	authUseCase := usecase.NewAuthUseCase(userRepo, refreshTokenRepo, passwordService, cfg.JWT.Secret, cfg.JWT.AccessTTL, cfg.JWT.RefreshTTL, logger)
 	userUseCase := usecase.NewUserUseCase(userRepo, registrationTokenRepo, passwordService, emailService, logger)
-	driverUseCase := usecase.NewDriverUseCase(driverRepo, logger)
+	driverUseCase := usecase.NewDriverUseCase(driverRepo, userRepo, emailService, registrationTokenRepo, passwordService, logger)
 	reservationUseCase := usecase.NewReservationUseCase(reservationRepo, userRepo, emailService, logger)
 	paymentUseCase := usecase.NewPaymentUseCase(paymentRepo, reservationRepo, paymentGateway, logger)
 	companyUseCase := usecase.NewCompanyUseCase(companyRepo, logger)
@@ -125,11 +124,13 @@ func main() {
 	authHandler := handler.NewAuthHandler(authUseCase, validate, logger)
 	userHandler := handler.NewUserHandler(userUseCase, validate, logger)
 	driverHandler := handler.NewDriverHandler(driverUseCase, validate, logger)
+	driverDashboardHandler := handler.NewDriverDashboardHandler(driverUseCase, logger)
 	reservationHandler := handler.NewReservationHandler(reservationUseCase, validate, logger)
 	paymentHandler := handler.NewPaymentHandler(paymentUseCase, validate, logger)
 	companyHandler := handler.NewCompanyHandler(companyUseCase, validate, logger)
 	vehicleHandler := handler.NewVehicleHandler(vehicleUseCase, validate, logger)
 	supportHandler := handler.NewSupportHandler(emailService, userRepo, validate, logger)
+	billingHandler := handler.NewBillingHandler(paymentUseCase, logger)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(authUseCase, logger)
@@ -162,16 +163,37 @@ func main() {
 	// Swagger documentation
 	ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// Create admin handler
+	adminHandler := handler.NewAdminHandler(
+		*userRepo,
+		*driverRepo,
+		*vehicleRepo,
+		*reservationRepo,
+		*companyRepo,
+		logger,
+	)
+
+	// Create company detail handler
+	companyDetailHandler := handler.NewCompanyDetailHandler(
+		*companyRepo,
+		*userRepo,
+		logger,
+	)
+
 	// Setup API routes
 	router.SetupRoutes(ginRouter, router.RouteHandlers{
-		Auth:        authHandler,
-		User:        userHandler,
-		Driver:      driverHandler,
-		Reservation: reservationHandler,
-		Payment:     paymentHandler,
-		Company:     companyHandler,
-		Vehicle:     vehicleHandler,
-		Support:     supportHandler,
+		Auth:            authHandler,
+		User:            userHandler,
+		Driver:          driverHandler,
+		DriverDashboard: driverDashboardHandler,
+		Reservation:     reservationHandler,
+		Payment:         paymentHandler,
+		Company:         companyHandler,
+		CompanyDetail:   companyDetailHandler,
+		Vehicle:         vehicleHandler,
+		Support:         supportHandler,
+		Admin:           adminHandler,
+		Billing:         billingHandler,
 	}, authMiddleware)
 
 	// Start server

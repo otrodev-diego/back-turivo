@@ -644,6 +644,9 @@ type Driver struct {
 	Status    DriverStatus       `json:"status"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	UserID    pgtype.UUID        `json:"user_id"`
+	CompanyID pgtype.UUID        `json:"company_id"`
+	VehicleID pgtype.UUID        `json:"vehicle_id"`
 }
 
 type DriverAvailability struct {
@@ -663,11 +666,12 @@ type DriverBackgroundCheck struct {
 
 type DriverFeedback struct {
 	ID            pgtype.UUID        `json:"id"`
-	TripID        string             `json:"trip_id"`
-	PassengerName string             `json:"passenger_name"`
-	Rating        int32              `json:"rating"`
+	DriverID      string             `json:"driver_id"`
+	ReservationID string             `json:"reservation_id"`
+	Rating        pgtype.Numeric     `json:"rating"`
 	Comment       *string            `json:"comment"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }
 
 type DriverLicense struct {
@@ -717,6 +721,8 @@ type RegistrationToken struct {
 	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
 	Used      *bool              `json:"used"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	// Profile type for COMPANY role registrations. Valid values: COMPANY_ADMIN, COMPANY_USER
+	CompanyProfile *string `json:"company_profile"`
 }
 
 type Request struct {
@@ -749,6 +755,8 @@ type Reservation struct {
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 	AssignedDriverID *string            `json:"assigned_driver_id"`
+	DistanceKm       pgtype.Numeric     `json:"distance_km"`
+	ArrivedOnTime    *bool              `json:"arrived_on_time"`
 }
 
 type ReservationTimeline struct {

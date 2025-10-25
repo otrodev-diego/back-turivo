@@ -31,7 +31,7 @@ func (r *RegistrationTokenRepository) Create(token *domain.RegistrationToken) er
 		zap.String("email", token.Email),
 		zap.String("role", string(token.Role)),
 	)
-	
+
 	ctx := context.Background()
 
 	orgID := pgtype.UUID{Valid: false}
@@ -74,7 +74,7 @@ func (r *RegistrationTokenRepository) Create(token *domain.RegistrationToken) er
 	)
 
 	if err != nil {
-		r.logger.Error("❌ FAILED to execute SQL query", 
+		r.logger.Error("❌ FAILED to execute SQL query",
 			zap.Error(err),
 			zap.String("token_id", token.ID.String()),
 			zap.String("email", token.Email),
@@ -164,6 +164,64 @@ func (r *RegistrationTokenRepository) MarkAsUsed(tokenStr string) error {
 	}
 
 	return nil
+}
+
+func (r *RegistrationTokenRepository) ListAll() ([]*domain.RegistrationToken, error) {
+	ctx := context.Background()
+
+	query := `
+		SELECT id, token, email, org_id, role, company_profile, expires_at, used, created_at
+		FROM registration_tokens
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		r.logger.Error("Failed to list registration tokens", zap.Error(err))
+		return nil, fmt.Errorf("failed to list registration tokens: %w", err)
+	}
+	defer rows.Close()
+
+	var tokens []*domain.RegistrationToken
+	for rows.Next() {
+		var token domain.RegistrationToken
+		var orgID pgtype.UUID
+		var companyProfile *string
+		var expiresAt, createdAt time.Time
+
+		err := rows.Scan(
+			&token.ID,
+			&token.Token,
+			&token.Email,
+			&orgID,
+			&token.Role,
+			&companyProfile,
+			&expiresAt,
+			&token.Used,
+			&createdAt,
+		)
+		if err != nil {
+			r.logger.Error("Failed to scan registration token", zap.Error(err))
+			return nil, fmt.Errorf("failed to scan registration token: %w", err)
+		}
+
+		if orgID.Valid {
+			orgUUID := uuid.UUID(orgID.Bytes)
+			token.OrgID = &orgUUID
+		}
+
+		if companyProfile != nil && *companyProfile != "" {
+			profile := domain.CompanyProfile(*companyProfile)
+			token.CompanyProfile = &profile
+		}
+
+		token.ExpiresAt = expiresAt.Unix()
+		token.CreatedAt = createdAt.Unix()
+
+		tokens = append(tokens, &token)
+	}
+
+	return tokens, nil
 }
 
 func (r *RegistrationTokenRepository) DeleteExpired() error {

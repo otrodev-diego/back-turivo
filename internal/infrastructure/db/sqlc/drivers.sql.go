@@ -30,9 +30,9 @@ func (q *Queries) CountDrivers(ctx context.Context, arg CountDriversParams) (int
 }
 
 const createDriver = `-- name: CreateDriver :one
-INSERT INTO drivers (id, first_name, last_name, rut_or_dni, birth_date, phone, email, photo_url, status)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, first_name, last_name, rut_or_dni, birth_date, phone, email, photo_url, status, created_at, updated_at
+INSERT INTO drivers (id, first_name, last_name, rut_or_dni, birth_date, phone, email, photo_url, status, user_id, company_id, vehicle_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+RETURNING id, first_name, last_name, rut_or_dni, birth_date, phone, email, photo_url, status, created_at, updated_at, user_id, company_id, vehicle_id
 `
 
 type CreateDriverParams struct {
@@ -45,6 +45,9 @@ type CreateDriverParams struct {
 	Email     *string      `json:"email"`
 	PhotoUrl  *string      `json:"photo_url"`
 	Status    DriverStatus `json:"status"`
+	UserID    pgtype.UUID  `json:"user_id"`
+	CompanyID pgtype.UUID  `json:"company_id"`
+	VehicleID pgtype.UUID  `json:"vehicle_id"`
 }
 
 func (q *Queries) CreateDriver(ctx context.Context, arg CreateDriverParams) (Driver, error) {
@@ -58,6 +61,9 @@ func (q *Queries) CreateDriver(ctx context.Context, arg CreateDriverParams) (Dri
 		arg.Email,
 		arg.PhotoUrl,
 		arg.Status,
+		arg.UserID,
+		arg.CompanyID,
+		arg.VehicleID,
 	)
 	var i Driver
 	err := row.Scan(
@@ -72,6 +78,9 @@ func (q *Queries) CreateDriver(ctx context.Context, arg CreateDriverParams) (Dri
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserID,
+		&i.CompanyID,
+		&i.VehicleID,
 	)
 	return i, err
 }
@@ -198,7 +207,7 @@ func (q *Queries) DeleteDriver(ctx context.Context, id string) error {
 }
 
 const getDriverByID = `-- name: GetDriverByID :one
-SELECT d.id, d.first_name, d.last_name, d.rut_or_dni, d.birth_date, d.phone, d.email, d.photo_url, d.status, d.created_at, d.updated_at, 
+SELECT d.id, d.first_name, d.last_name, d.rut_or_dni, d.birth_date, d.phone, d.email, d.photo_url, d.status, d.created_at, d.updated_at, d.user_id, d.company_id, d.vehicle_id, 
        dl.number as license_number, dl.class as license_class, dl.issued_at as license_issued_at, 
        dl.expires_at as license_expires_at, dl.file_url as license_file_url,
        dbc.status as background_status, dbc.file_url as background_file_url, dbc.checked_at as background_checked_at,
@@ -222,6 +231,9 @@ type GetDriverByIDRow struct {
 	Status              DriverStatus              `json:"status"`
 	CreatedAt           pgtype.Timestamptz        `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz        `json:"updated_at"`
+	UserID              pgtype.UUID               `json:"user_id"`
+	CompanyID           pgtype.UUID               `json:"company_id"`
+	VehicleID           pgtype.UUID               `json:"vehicle_id"`
 	LicenseNumber       *string                   `json:"license_number"`
 	LicenseClass        NullLicenseClass          `json:"license_class"`
 	LicenseIssuedAt     pgtype.Date               `json:"license_issued_at"`
@@ -250,6 +262,9 @@ func (q *Queries) GetDriverByID(ctx context.Context, id string) (GetDriverByIDRo
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserID,
+		&i.CompanyID,
+		&i.VehicleID,
 		&i.LicenseNumber,
 		&i.LicenseClass,
 		&i.LicenseIssuedAt,
@@ -266,7 +281,7 @@ func (q *Queries) GetDriverByID(ctx context.Context, id string) (GetDriverByIDRo
 }
 
 const listDrivers = `-- name: ListDrivers :many
-SELECT d.id, d.first_name, d.last_name, d.rut_or_dni, d.birth_date, d.phone, d.email, d.photo_url, d.status, d.created_at, d.updated_at, 
+SELECT d.id, d.first_name, d.last_name, d.rut_or_dni, d.birth_date, d.phone, d.email, d.photo_url, d.status, d.created_at, d.updated_at, d.user_id, d.company_id, d.vehicle_id, 
        dl.number as license_number, dl.class as license_class,
        dbc.status as background_status
 FROM drivers d
@@ -301,6 +316,9 @@ type ListDriversRow struct {
 	Status           DriverStatus              `json:"status"`
 	CreatedAt        pgtype.Timestamptz        `json:"created_at"`
 	UpdatedAt        pgtype.Timestamptz        `json:"updated_at"`
+	UserID           pgtype.UUID               `json:"user_id"`
+	CompanyID        pgtype.UUID               `json:"company_id"`
+	VehicleID        pgtype.UUID               `json:"vehicle_id"`
 	LicenseNumber    *string                   `json:"license_number"`
 	LicenseClass     NullLicenseClass          `json:"license_class"`
 	BackgroundStatus NullBackgroundCheckStatus `json:"background_status"`
@@ -333,6 +351,9 @@ func (q *Queries) ListDrivers(ctx context.Context, arg ListDriversParams) ([]Lis
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UserID,
+			&i.CompanyID,
+			&i.VehicleID,
 			&i.LicenseNumber,
 			&i.LicenseClass,
 			&i.BackgroundStatus,
@@ -359,7 +380,7 @@ SET first_name = COALESCE($2, first_name),
     status = COALESCE($9, status),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, first_name, last_name, rut_or_dni, birth_date, phone, email, photo_url, status, created_at, updated_at
+RETURNING id, first_name, last_name, rut_or_dni, birth_date, phone, email, photo_url, status, created_at, updated_at, user_id, company_id, vehicle_id
 `
 
 type UpdateDriverParams struct {
@@ -399,6 +420,9 @@ func (q *Queries) UpdateDriver(ctx context.Context, arg UpdateDriverParams) (Dri
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserID,
+		&i.CompanyID,
+		&i.VehicleID,
 	)
 	return i, err
 }

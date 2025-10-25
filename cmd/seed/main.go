@@ -97,6 +97,25 @@ func generateDemoData(conn *pgx.Conn) error {
 	}
 
 	// Create users
+	// Usuarios por defecto comentados por seguridad
+	// Descomenta y modifica las credenciales según sea necesario
+	/*
+		users := []struct {
+			id           uuid.UUID
+			name         string
+			email        string
+			passwordHash string
+			role         string
+			orgID        *uuid.UUID
+		}{
+			{uuid.New(), "Admin Sistema", "admin@turivo.com", "$2a$10$9pjpOYuBh0O/loXHGwBOg.l6hrmZHtsae/2UqhD23ff4O5nTwgymC", "ADMIN", nil},                      // password
+			{uuid.New(), "Juan Pérez", "juan@turivo.com", "$2a$10$9pjpOYuBh0O/loXHGwBOg.l6hrmZHtsae/2UqhD23ff4O5nTwgymC", "COMPANY", &companies[0].id},           // password
+			{uuid.New(), "María González", "maria@turismoandes.cl", "$2a$10$9pjpOYuBh0O/loXHGwBOg.l6hrmZHtsae/2UqhD23ff4O5nTwgymC", "COMPANY", &companies[1].id}, // password
+			{uuid.New(), "Cliente Demo", "cliente@demo.com", "$2a$10$9pjpOYuBh0O/loXHGwBOg.l6hrmZHtsae/2UqhD23ff4O5nTwgymC", "USER", nil},                        // password
+		}
+	*/
+
+	// Array vacío para no crear usuarios por defecto
 	users := []struct {
 		id           uuid.UUID
 		name         string
@@ -104,12 +123,7 @@ func generateDemoData(conn *pgx.Conn) error {
 		passwordHash string
 		role         string
 		orgID        *uuid.UUID
-	}{
-		{uuid.New(), "Admin Sistema", "admin@turivo.com", "$2a$10$9pjpOYuBh0O/loXHGwBOg.l6hrmZHtsae/2UqhD23ff4O5nTwgymC", "ADMIN", nil},                      // password
-		{uuid.New(), "Juan Pérez", "juan@turivo.com", "$2a$10$9pjpOYuBh0O/loXHGwBOg.l6hrmZHtsae/2UqhD23ff4O5nTwgymC", "COMPANY", &companies[0].id},           // password
-		{uuid.New(), "María González", "maria@turismoandes.cl", "$2a$10$9pjpOYuBh0O/loXHGwBOg.l6hrmZHtsae/2UqhD23ff4O5nTwgymC", "COMPANY", &companies[1].id}, // password
-		{uuid.New(), "Cliente Demo", "cliente@demo.com", "$2a$10$9pjpOYuBh0O/loXHGwBOg.l6hrmZHtsae/2UqhD23ff4O5nTwgymC", "USER", nil},                        // password
-	}
+	}{}
 
 	for _, u := range users {
 		_, err := tx.Exec(ctx, `

@@ -52,13 +52,13 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Name           *string          `json:"name,omitempty" validate:"omitempty,min=2,max=255"`
-	Email          *string          `json:"email,omitempty" validate:"omitempty,email"`
-	Password       *string          `json:"password,omitempty" validate:"omitempty,min=8"`
-	Role           *UserRole        `json:"role,omitempty"`
-	Status         *UserStatus      `json:"status,omitempty"`
-	OrgID          *uuid.UUID       `json:"org_id,omitempty"`
-	CompanyProfile *CompanyProfile  `json:"company_profile,omitempty"`
+	Name           *string         `json:"name,omitempty" validate:"omitempty,min=2,max=255"`
+	Email          *string         `json:"email,omitempty" validate:"omitempty,email"`
+	Password       *string         `json:"password,omitempty" validate:"omitempty,min=8"`
+	Role           *UserRole       `json:"role,omitempty"`
+	Status         *UserStatus     `json:"status,omitempty"`
+	OrgID          *uuid.UUID      `json:"org_id,omitempty"`
+	CompanyProfile *CompanyProfile `json:"company_profile,omitempty"`
 }
 
 type ListUsersRequest struct {
@@ -77,5 +77,6 @@ type UserRepository interface {
 	GetByEmail(email string) (*User, error)
 	List(req ListUsersRequest) ([]*User, int, error)
 	Update(id uuid.UUID, req UpdateUserRequest) (*User, error)
+	UpdateUser(user *User) error
 	Delete(id uuid.UUID) error
 }

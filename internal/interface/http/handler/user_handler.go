@@ -532,6 +532,28 @@ func (h *UserHandler) CompleteRegistration(c *gin.Context) {
 	c.JSON(http.StatusCreated, user)
 }
 
+// ListRegistrationTokens godoc
+// @Summary List all registration tokens (temporary endpoint for debugging)
+// @Description List all registration tokens in the database
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Success 200 {array} domain.RegistrationToken
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/auth/tokens [get]
+func (h *UserHandler) ListRegistrationTokens(c *gin.Context) {
+	tokens, err := h.userUseCase.ListRegistrationTokens()
+	if err != nil {
+		h.logger.Error("Failed to list registration tokens", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, tokens)
+}
+
 // ValidateRegistrationToken godoc
 // @Summary Validate registration token
 // @Description Validate if a registration token is valid

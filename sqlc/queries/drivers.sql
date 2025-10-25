@@ -1,6 +1,6 @@
 -- name: CreateDriver :one
-INSERT INTO drivers (id, first_name, last_name, rut_or_dni, birth_date, phone, email, photo_url, status)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO drivers (id, first_name, last_name, rut_or_dni, birth_date, phone, email, photo_url, status, user_id, company_id, vehicle_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING *;
 
 -- name: GetDriverByID :one

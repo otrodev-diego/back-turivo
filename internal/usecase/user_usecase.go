@@ -198,7 +198,7 @@ func (uc *UserUseCase) CreateUserWithInvitation(email string, role domain.UserRo
 }
 
 func (uc *UserUseCase) CreateUserWithInvitationAndProfile(email string, role domain.UserRole, orgID *uuid.UUID, companyProfile *domain.CompanyProfile) error {
-	uc.logger.Info("🔵 === CreateUserWithInvitationAndProfile UseCase Started ===", 
+	uc.logger.Info("🔵 === CreateUserWithInvitationAndProfile UseCase Started ===",
 		zap.String("email", email),
 		zap.String("role", string(role)),
 		zap.Bool("has_org_id", orgID != nil),
@@ -232,15 +232,15 @@ func (uc *UserUseCase) CreateUserWithInvitationAndProfile(email string, role dom
 			uc.logger.Error("❌ FAILED to list users", zap.Error(err))
 			return domain.ErrInternalError
 		}
-		
+
 		if len(existingUsers) >= 5 {
-			uc.logger.Warn("⚠️ Company has reached the limit of 5 users", 
+			uc.logger.Warn("⚠️ Company has reached the limit of 5 users",
 				zap.String("org_id", orgID.String()),
 				zap.Int("current_users", len(existingUsers)),
 			)
 			return domain.ErrMaxUsersReached
 		}
-		uc.logger.Info("✅ Company user limit check passed", 
+		uc.logger.Info("✅ Company user limit check passed",
 			zap.Int("current_users", len(existingUsers)),
 			zap.Int("limit", 5),
 		)
@@ -270,14 +270,14 @@ func (uc *UserUseCase) CreateUserWithInvitationAndProfile(email string, role dom
 	}
 
 	if err := uc.registrationTokenRepo.Create(registrationToken); err != nil {
-		uc.logger.Error("❌ FAILED to create registration token in database", 
+		uc.logger.Error("❌ FAILED to create registration token in database",
 			zap.Error(err),
 			zap.String("email", email),
 			zap.String("token_id", registrationToken.ID.String()),
 		)
 		return domain.ErrInternalError
 	}
-	uc.logger.Info("✅ Registration token saved to database", 
+	uc.logger.Info("✅ Registration token saved to database",
 		zap.String("token_id", registrationToken.ID.String()),
 		zap.String("email", email),
 	)
@@ -286,7 +286,7 @@ func (uc *UserUseCase) CreateUserWithInvitationAndProfile(email string, role dom
 	uc.logger.Info("📧 Sending welcome email", zap.String("email", email))
 	name := email // Use email as name since we don't have the name yet
 	if err := uc.emailService.SendWelcomeEmail(email, name, token); err != nil {
-		uc.logger.Error("❌ FAILED to send welcome email", 
+		uc.logger.Error("❌ FAILED to send welcome email",
 			zap.Error(err),
 			zap.String("email", email),
 		)
@@ -323,12 +323,62 @@ func (uc *UserUseCase) CompleteRegistration(req domain.CompleteRegistrationReque
 		return nil, fmt.Errorf("registration token has expired")
 	}
 
-	// Check if user already exists (shouldn't happen, but just in case)
+	// Check if user already exists
 	existingUser, err := uc.userRepo.GetByEmail(regToken.Email)
 	if err != nil && err != domain.ErrUserNotFound {
 		uc.logger.Error("Failed to check existing user", zap.Error(err))
 		return nil, domain.ErrInternalError
 	}
+
+	// If user exists and it's a DRIVER role, update the password instead of creating new user
+	userRole := "N/A"
+	if existingUser != nil {
+		userRole = string(existingUser.Role)
+	}
+	uc.logger.Info("Checking user existence and role",
+		zap.Bool("user_exists", existingUser != nil),
+		zap.String("token_role", string(regToken.Role)),
+		zap.String("user_role", userRole),
+		zap.String("email", regToken.Email),
+	)
+
+	if existingUser != nil && regToken.Role == domain.UserRoleDriver {
+		uc.logger.Info("User already exists for DRIVER role, updating password",
+			zap.String("email", regToken.Email),
+			zap.String("user_id", existingUser.ID.String()),
+		)
+
+		// Hash new password
+		hashedPassword, err := uc.passwordService.HashPassword(req.Password)
+		if err != nil {
+			uc.logger.Error("Failed to hash password", zap.Error(err))
+			return nil, domain.ErrInternalError
+		}
+
+		// Update user with new password and name
+		existingUser.Name = req.Name
+		existingUser.PasswordHash = hashedPassword
+		existingUser.UpdatedAt = time.Now()
+
+		if err := uc.userRepo.UpdateUser(existingUser); err != nil {
+			uc.logger.Error("Failed to update user", zap.Error(err))
+			return nil, domain.ErrInternalError
+		}
+
+		// Mark token as used
+		if err := uc.registrationTokenRepo.MarkAsUsed(req.Token); err != nil {
+			uc.logger.Error("Failed to mark registration token as used", zap.Error(err))
+			// Don't return error here as the user is already updated
+		}
+
+		uc.logger.Info("Driver registration completed successfully",
+			zap.String("user_id", existingUser.ID.String()),
+			zap.String("email", existingUser.Email),
+		)
+		return existingUser, nil
+	}
+
+	// If user exists for non-DRIVER roles, return error
 	if existingUser != nil {
 		return nil, domain.ErrUserAlreadyExists
 	}
@@ -392,6 +442,11 @@ func (uc *UserUseCase) ValidateRegistrationToken(token string) (*domain.Registra
 	}
 
 	return regToken, nil
+}
+
+// ListRegistrationTokens lists all registration tokens (temporary method for debugging)
+func (uc *UserUseCase) ListRegistrationTokens() ([]*domain.RegistrationToken, error) {
+	return uc.registrationTokenRepo.ListAll()
 }
 
 // generateRegistrationToken generates a secure random token

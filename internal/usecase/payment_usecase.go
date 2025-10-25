@@ -172,3 +172,23 @@ func (uc *PaymentUseCase) GetPaymentsByReservationID(reservationID string) ([]*d
 
 	return payments, nil
 }
+
+// GetCompanyPayments gets payments for a specific company
+func (uc *PaymentUseCase) GetCompanyPayments(companyID uuid.UUID, page, pageSize int, status string) ([]*domain.Payment, int, error) {
+	uc.logger.Info("Getting company payments", 
+		zap.String("company_id", companyID.String()),
+		zap.Int("page", page),
+		zap.Int("page_size", pageSize),
+		zap.String("status", status))
+
+	// For now, return empty results since we don't have real payment data
+	// TODO: Implement real payment filtering by company
+	payments := []*domain.Payment{}
+	total := 0
+
+	uc.logger.Info("Company payments retrieved", 
+		zap.Int("count", len(payments)),
+		zap.Int("total", total))
+
+	return payments, total, nil
+}

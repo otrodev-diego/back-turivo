@@ -8,14 +8,18 @@ import (
 )
 
 type RouteHandlers struct {
-	Auth        *handler.AuthHandler
-	User        *handler.UserHandler
-	Driver      *handler.DriverHandler
-	Reservation *handler.ReservationHandler
-	Payment     *handler.PaymentHandler
-	Company     *handler.CompanyHandler
-	Vehicle     *handler.VehicleHandler
-	Support     *handler.SupportHandler
+	Auth            *handler.AuthHandler
+	User            *handler.UserHandler
+	Driver          *handler.DriverHandler
+	DriverDashboard *handler.DriverDashboardHandler
+	Reservation     *handler.ReservationHandler
+	Payment         *handler.PaymentHandler
+	Company         *handler.CompanyHandler
+	CompanyDetail   *handler.CompanyDetailHandler
+	Vehicle         *handler.VehicleHandler
+	Support         *handler.SupportHandler
+	Admin           *handler.AdminHandler
+	Billing         *handler.BillingHandler
 }
 
 func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *middleware.AuthMiddleware) {
@@ -30,6 +34,7 @@ func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *mid
 			auth.POST("/logout", handlers.Auth.Logout)
 			auth.POST("/complete-registration", handlers.User.CompleteRegistration)
 			auth.GET("/validate-token", handlers.User.ValidateRegistrationToken)
+			auth.GET("/tokens", handlers.User.ListRegistrationTokens)
 		}
 
 		// Protected routes (authentication required)
@@ -67,6 +72,19 @@ func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *mid
 				drivers.GET("/:id/kpis", handlers.Driver.GetDriverKPIs)
 			}
 
+			// Driver dashboard routes (Driver role only)
+			if handlers.DriverDashboard != nil {
+				driverDashboard := protected.Group("/driver")
+				driverDashboard.Use(authMiddleware.RequireRole("DRIVER"))
+				{
+					driverDashboard.GET("/stats", handlers.DriverDashboard.GetDriverStats)
+					driverDashboard.GET("/trips", handlers.DriverDashboard.GetDriverTrips)
+					driverDashboard.GET("/vehicle", handlers.DriverDashboard.GetDriverVehicle)
+					driverDashboard.GET("/profile", handlers.DriverDashboard.GetDriverProfile)
+					driverDashboard.PATCH("/trips/:tripId/status", handlers.DriverDashboard.UpdateTripStatus)
+				}
+			}
+
 			// Reservations routes (All authenticated users)
 			reservations := protected.Group("/reservations")
 			{
@@ -99,6 +117,13 @@ func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *mid
 			{
 				companies.GET("", handlers.Company.ListCompanies)
 				companies.GET("/:id", handlers.Company.GetCompany)
+			}
+
+			// Company detail route (separate to avoid org scope issues)
+			companyDetail := protected.Group("/companies")
+			companyDetail.Use(authMiddleware.RequireRole("ADMIN", "USER", "COMPANY"))
+			{
+				companyDetail.GET("/:id/detail", handlers.CompanyDetail.GetCompanyDetail)
 			}
 
 			// Admin-only company operations (separate group to avoid middleware conflicts)
@@ -137,6 +162,25 @@ func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *mid
 			companyUsers.Use(authMiddleware.RequireRole("COMPANY"))
 			{
 				companyUsers.POST("/invite", handlers.User.InviteCompanyUser)
+			}
+
+			// Company billing routes (Company users only)
+			if handlers.Billing != nil {
+				companyBilling := protected.Group("/company")
+				companyBilling.Use(authMiddleware.RequireRole("COMPANY"))
+				companyBilling.Use(authMiddleware.RequireOrgScope())
+				{
+					companyBilling.GET("/payments", handlers.Billing.GetCompanyPayments)
+				}
+			}
+
+			// Admin dashboard routes (Admin only)
+			if handlers.Admin != nil {
+				admin := protected.Group("/admin")
+				admin.Use(authMiddleware.RequireRole("ADMIN"))
+				{
+					admin.GET("/dashboard", handlers.Admin.GetAdminDashboard)
+				}
 			}
 		}
 	}

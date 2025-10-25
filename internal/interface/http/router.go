@@ -160,6 +160,17 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 				vehicles.POST("/:id/assign", r.vehicleHandler.AssignVehicleToDriver)
 			}
 
+			// Driver Dashboard routes (DRIVER role only)
+			driver := protected.Group("/driver")
+			driver.Use(r.authMiddleware.RequireRole("DRIVER"))
+			{
+				driver.GET("/stats", r.driverDashboardHandler.GetDriverStats)
+				driver.GET("/trips", r.driverDashboardHandler.GetDriverTrips)
+				driver.GET("/vehicle", r.driverDashboardHandler.GetDriverVehicle)
+				driver.GET("/profile", r.driverDashboardHandler.GetDriverProfile)
+				driver.PATCH("/trips/:tripId/status", r.driverDashboardHandler.UpdateTripStatus)
+			}
+
 			// Support routes (All authenticated users)
 			if r.supportHandler != nil {
 				support := protected.Group("/support")

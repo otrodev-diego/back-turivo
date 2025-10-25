@@ -318,6 +318,44 @@ func (r *UserRepository) Update(id uuid.UUID, req domain.UpdateUserRequest) (*do
 	return user, nil
 }
 
+func (r *UserRepository) UpdateUser(user *domain.User) error {
+	ctx := context.Background()
+
+	// Convert domain UUID to pgtype.UUID
+	var pgID pgtype.UUID
+	copy(pgID.Bytes[:], user.ID[:])
+	pgID.Valid = true
+
+	var orgID pgtype.UUID
+	if user.OrgID != nil {
+		copy(orgID.Bytes[:], (*user.OrgID)[:])
+		orgID.Valid = true
+	}
+
+	var companyProfile *string
+	if user.CompanyProfile != nil {
+		profileStr := string(*user.CompanyProfile)
+		companyProfile = &profileStr
+	}
+
+	// Execute the update
+	_, err := r.queries.UpdateUser(ctx, sqlc.UpdateUserParams{
+		ID:             pgID,
+		Name:           user.Name,
+		Email:          user.Email,
+		PasswordHash:   user.PasswordHash,
+		Role:           sqlc.UserRole(user.Role),
+		Status:         sqlc.UserStatus(user.Status),
+		OrgID:          orgID,
+		CompanyProfile: companyProfile,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+
+	return nil
+}
+
 func (r *UserRepository) Delete(id uuid.UUID) error {
 	ctx := context.Background()
 

@@ -65,6 +65,7 @@ type RegistrationTokenRepository interface {
 	GetByToken(token string) (*RegistrationToken, error)
 	MarkAsUsed(token string) error
 	DeleteExpired() error
+	ListAll() ([]*RegistrationToken, error)
 }
 
 type CompleteRegistrationRequest struct {

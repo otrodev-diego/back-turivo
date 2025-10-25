@@ -61,12 +61,19 @@ type Driver struct {
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt time.Time    `json:"updated_at"`
 
+	// New relationships
+	UserID    *string `json:"user_id,omitempty"`
+	CompanyID *string `json:"company_id,omitempty"`
+	VehicleID *string `json:"vehicle_id,omitempty"`
+
 	// Related data
 	License         *DriverLicense         `json:"license,omitempty"`
 	BackgroundCheck *DriverBackgroundCheck `json:"background_check,omitempty"`
 	Availability    *DriverAvailability    `json:"availability,omitempty"`
 	Vehicle         *Vehicle               `json:"vehicle,omitempty"`
 	KPIs            *DriverKPIs            `json:"kpis,omitempty"`
+	User            *User                  `json:"user,omitempty"`
+	Company         *Company               `json:"company,omitempty"`
 }
 
 type DriverLicense struct {
@@ -101,6 +108,16 @@ type DriverKPIs struct {
 	AverageRating float64 `json:"average_rating"`
 }
 
+type DriverFeedback struct {
+	ID            string    `json:"id"`
+	DriverID      string    `json:"driver_id"`
+	ReservationID string    `json:"reservation_id"`
+	Rating        float64   `json:"rating"`
+	Comment       *string   `json:"comment,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
 type CreateDriverRequest struct {
 	ID        string       `json:"id" validate:"required,min=3,max=20"`
 	FirstName string       `json:"first_name" validate:"required,min=2,max=255"`
@@ -111,6 +128,11 @@ type CreateDriverRequest struct {
 	Email     *string      `json:"email,omitempty" validate:"omitempty,email"`
 	PhotoURL  *string      `json:"photo_url,omitempty" validate:"omitempty,url"`
 	Status    DriverStatus `json:"status" validate:"required"`
+
+	// New fields for relationships
+	UserID    *string `json:"user_id,omitempty"`
+	CompanyID *string `json:"company_id,omitempty"`
+	VehicleID *string `json:"vehicle_id,omitempty"`
 }
 
 type UpdateDriverRequest struct {
@@ -122,6 +144,11 @@ type UpdateDriverRequest struct {
 	Email     *string       `json:"email,omitempty" validate:"omitempty,email"`
 	PhotoURL  *string       `json:"photo_url,omitempty" validate:"omitempty,url"`
 	Status    *DriverStatus `json:"status,omitempty"`
+
+	// New fields for relationships
+	UserID    *string `json:"user_id,omitempty"`
+	CompanyID *string `json:"company_id,omitempty"`
+	VehicleID *string `json:"vehicle_id,omitempty"`
 }
 
 type ListDriversRequest struct {
@@ -175,5 +202,14 @@ type DriverRepository interface {
 
 	// KPIs (calculated from other tables)
 	GetKPIs(driverID string) (*DriverKPIs, error)
-}
 
+	// Feedback operations
+	CreateFeedback(feedback *DriverFeedback) error
+	GetDriverFeedback(driverID string) ([]*DriverFeedback, error)
+
+	// New methods for driver dashboard
+	GetByUserID(userID string) (*Driver, error)
+	GetDriverTrips(driverID string) ([]*Reservation, error)
+	GetDriverVehicle(driverID string) (*Vehicle, error)
+	UpdateTripStatus(driverID, tripID, status string) error
+}

@@ -226,10 +226,21 @@ El comando seed genera datos alineados con el frontend:
 go run cmd/seed/main.go -demo
 ```
 
-**Usuarios creados**:
-- Admin: `admin@turivo.com` / `password`
-- Company: `juan@turivo.com` / `password`
-- User: `cliente@demo.com` / `password`
+**Crear primer usuario administrador**:
+
+```bash
+# Crear usuario administrador
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Admin Sistema",
+    "email": "admin@tudominio.com",
+    "password": "tu_password_seguro",
+    "role": "ADMIN"
+  }'
+```
+
+**Nota**: Las credenciales por defecto han sido removidas por seguridad.
 
 **Conductores**: CON-001, CON-002, CON-003
 **Reservas**: RSV-1001, RSV-1002, RSV-1003

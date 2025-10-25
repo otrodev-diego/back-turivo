@@ -180,6 +180,7 @@ func (uc *AuthUseCase) ValidateAccessToken(tokenString string) (*domain.JWTClaim
 
 func (uc *AuthUseCase) GenerateAccessToken(user *domain.User) (string, error) {
 	now := time.Now()
+	uc.logger.Info("Generating access token", zap.Duration("accessTokenTTL", uc.accessTokenTTL))
 	claims := &domain.JWTClaims{
 		UserID:         user.ID,
 		Role:           user.Role,
@@ -215,4 +216,3 @@ func (uc *AuthUseCase) GenerateRefreshToken(userID uuid.UUID) (*domain.RefreshTo
 
 	return refreshToken, nil
 }
-

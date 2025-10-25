@@ -41,7 +41,7 @@ func (q *Queries) CountReservations(ctx context.Context, arg CountReservationsPa
 const createReservation = `-- name: CreateReservation :one
 INSERT INTO reservations (id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, assigned_driver_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-RETURNING id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id
+RETURNING id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id, distance_km, arrived_on_time
 `
 
 type CreateReservationParams struct {
@@ -87,6 +87,8 @@ func (q *Queries) CreateReservation(ctx context.Context, arg CreateReservationPa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.AssignedDriverID,
+		&i.DistanceKm,
+		&i.ArrivedOnTime,
 	)
 	return i, err
 }
@@ -101,7 +103,7 @@ func (q *Queries) DeleteReservation(ctx context.Context, id string) error {
 }
 
 const getReservationByID = `-- name: GetReservationByID :one
-SELECT id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id FROM reservations WHERE id = $1
+SELECT id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id, distance_km, arrived_on_time FROM reservations WHERE id = $1
 `
 
 func (q *Queries) GetReservationByID(ctx context.Context, id string) (Reservation, error) {
@@ -121,12 +123,14 @@ func (q *Queries) GetReservationByID(ctx context.Context, id string) (Reservatio
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.AssignedDriverID,
+		&i.DistanceKm,
+		&i.ArrivedOnTime,
 	)
 	return i, err
 }
 
 const getReservationsByDateRange = `-- name: GetReservationsByDateRange :many
-SELECT id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id FROM reservations
+SELECT id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id, distance_km, arrived_on_time FROM reservations
 WHERE datetime BETWEEN $1 AND $2
 ORDER BY datetime ASC
 `
@@ -159,6 +163,8 @@ func (q *Queries) GetReservationsByDateRange(ctx context.Context, arg GetReserva
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.AssignedDriverID,
+			&i.DistanceKm,
+			&i.ArrivedOnTime,
 		); err != nil {
 			return nil, err
 		}
@@ -171,7 +177,7 @@ func (q *Queries) GetReservationsByDateRange(ctx context.Context, arg GetReserva
 }
 
 const getReservationsByStatus = `-- name: GetReservationsByStatus :many
-SELECT id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id FROM reservations
+SELECT id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id, distance_km, arrived_on_time FROM reservations
 WHERE status = $1
 ORDER BY datetime ASC
 `
@@ -199,6 +205,8 @@ func (q *Queries) GetReservationsByStatus(ctx context.Context, status Reservatio
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.AssignedDriverID,
+			&i.DistanceKm,
+			&i.ArrivedOnTime,
 		); err != nil {
 			return nil, err
 		}
@@ -211,7 +219,7 @@ func (q *Queries) GetReservationsByStatus(ctx context.Context, status Reservatio
 }
 
 const listReservations = `-- name: ListReservations :many
-SELECT id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id FROM reservations
+SELECT id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id, distance_km, arrived_on_time FROM reservations
 WHERE ($1::text IS NULL OR pickup ILIKE '%' || $1 || '%' OR destination ILIKE '%' || $1 || '%' OR id ILIKE '%' || $1 || '%')
   AND ($2::reservation_status IS NULL OR status = $2)
   AND ($3::uuid IS NULL OR user_id = $3)
@@ -264,6 +272,8 @@ func (q *Queries) ListReservations(ctx context.Context, arg ListReservationsPara
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.AssignedDriverID,
+			&i.DistanceKm,
+			&i.ArrivedOnTime,
 		); err != nil {
 			return nil, err
 		}
@@ -287,7 +297,7 @@ SET pickup = COALESCE($2, pickup),
     assigned_driver_id = COALESCE($9, assigned_driver_id),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id
+RETURNING id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id, distance_km, arrived_on_time
 `
 
 type UpdateReservationParams struct {
@@ -329,6 +339,8 @@ func (q *Queries) UpdateReservation(ctx context.Context, arg UpdateReservationPa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.AssignedDriverID,
+		&i.DistanceKm,
+		&i.ArrivedOnTime,
 	)
 	return i, err
 }
@@ -338,7 +350,7 @@ UPDATE reservations
 SET status = $2,
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id
+RETURNING id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id, distance_km, arrived_on_time
 `
 
 type UpdateReservationStatusParams struct {
@@ -363,6 +375,8 @@ func (q *Queries) UpdateReservationStatus(ctx context.Context, arg UpdateReserva
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.AssignedDriverID,
+		&i.DistanceKm,
+		&i.ArrivedOnTime,
 	)
 	return i, err
 }
