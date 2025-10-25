@@ -12,6 +12,7 @@ import (
 
 type ReservationUseCase struct {
 	reservationRepo domain.ReservationRepository
+	driverRepo      domain.DriverRepository
 	userRepo        domain.UserRepository
 	emailService    domain.EmailService
 	logger          *zap.Logger
@@ -19,12 +20,14 @@ type ReservationUseCase struct {
 
 func NewReservationUseCase(
 	reservationRepo domain.ReservationRepository,
+	driverRepo domain.DriverRepository,
 	userRepo domain.UserRepository,
 	emailService domain.EmailService,
 	logger *zap.Logger,
 ) *ReservationUseCase {
 	return &ReservationUseCase{
 		reservationRepo: reservationRepo,
+		driverRepo:      driverRepo,
 		userRepo:        userRepo,
 		emailService:    emailService,
 		logger:          logger,
@@ -60,6 +63,10 @@ func (uc *ReservationUseCase) CreateReservation(req domain.CreateReservationRequ
 	// Calculate price
 	price := reservation.CalculatePrice(vehicleType, hasSpecialLanguage, stops)
 	reservation.Amount = &price
+
+	// Calculate distance
+	distance := reservation.CalculateDistance()
+	reservation.DistanceKM = &distance
 
 	if err := uc.reservationRepo.Create(reservation); err != nil {
 		uc.logger.Error("Failed to create reservation", zap.Error(err))
@@ -302,6 +309,16 @@ func (uc *ReservationUseCase) AssignDriver(reservationID string, driverID string
 		return nil, domain.ErrInvalidInput
 	}
 
+	// Get driver information for timeline
+	driver, err := uc.driverRepo.GetByID(driverID)
+	if err != nil {
+		if err == domain.ErrDriverNotFound {
+			return nil, domain.ErrDriverNotFound
+		}
+		uc.logger.Error("Failed to get driver for assignment", zap.Error(err))
+		return nil, err
+	}
+
 	// Assign driver using repository
 	err = uc.reservationRepo.AssignDriver(reservationID, driverID)
 	if err != nil {
@@ -319,13 +336,14 @@ func (uc *ReservationUseCase) AssignDriver(reservationID string, driverID string
 		return nil, err
 	}
 
-	// Add timeline event
+	// Add timeline event with driver name
 	timelineEvent := domain.TimelineEvent{
 		ReservationID: reservationID,
 		Title:         "Conductor asignado",
-		Description:   fmt.Sprintf("Conductor %s asignado a la reserva", driverID),
+		Description:   fmt.Sprintf("Conductor %s %s asignado a la reserva", driver.FirstName, driver.LastName),
 		At:            time.Now(),
-		Variant:       "info",
+		Variant:       "primary",
+		CreatedAt:     time.Now(),
 	}
 
 	if err := uc.reservationRepo.AddTimelineEvent(reservationID, timelineEvent); err != nil {
@@ -336,6 +354,7 @@ func (uc *ReservationUseCase) AssignDriver(reservationID string, driverID string
 	uc.logger.Info("Driver assigned successfully to reservation",
 		zap.String("reservation_id", reservationID),
 		zap.String("driver_id", driverID),
+		zap.String("driver_name", fmt.Sprintf("%s %s", driver.FirstName, driver.LastName)),
 	)
 
 	return updatedReservation, nil
