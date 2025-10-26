@@ -25,6 +25,7 @@ type Reservation struct {
 	Passengers       int               `json:"passengers"`
 	Status           ReservationStatus `json:"status"`
 	Amount           *float64          `json:"amount,omitempty"`
+	DistanceKM       *float64          `json:"distance_km,omitempty"`
 	Notes            *string           `json:"notes,omitempty"`
 	AssignedDriverID *string           `json:"assigned_driver_id,omitempty"`
 	CreatedAt        time.Time         `json:"created_at"`
@@ -135,6 +136,28 @@ func (r *Reservation) CalculatePrice(vehicleType VehicleType, hasSpecialLanguage
 	}
 
 	return basePrice
+}
+
+// CalculateDistance calculates the distance between pickup and destination
+// This is a simplified calculation - in production, you'd use Google Maps API
+func (r *Reservation) CalculateDistance() float64 {
+	// For now, return a mock distance based on common routes
+	// In production, this should call Google Maps Distance Matrix API
+
+	// Mock distance calculation based on pickup and destination
+	// This is a simplified version - real implementation would use geocoding
+	pickup := r.Pickup
+	destination := r.Destination
+
+	// Simple heuristic: if both locations are in the same city, shorter distance
+	// This is just for demonstration - real implementation needs proper geocoding
+	if len(pickup) > 0 && len(destination) > 0 {
+		// Mock calculation: assume average distance of 15-25 km for city trips
+		// In production, use Google Maps API to get real distance
+		return 18.5 // Mock distance in kilometers
+	}
+
+	return 0
 }
 
 type ReservationRepository interface {

@@ -176,8 +176,20 @@ func (h *DriverDashboardHandler) GetDriverVehicle(c *gin.Context) {
 	vehicle, err := h.driverUseCase.GetDriverVehicle(driver.ID)
 	if err != nil {
 		if err == domain.ErrNotFound {
-			c.JSON(http.StatusNotFound, ErrorResponse{
-				Error: "No vehicle assigned to this driver",
+			// Return empty vehicle object instead of 404
+			h.logger.Info("No vehicle assigned to driver", zap.String("driver_id", driver.ID))
+			c.JSON(http.StatusOK, gin.H{
+				"id":        nil,
+				"driver_id": nil,
+				"type":      nil,
+				"brand":     nil,
+				"model":     nil,
+				"year":      nil,
+				"plate":     nil,
+				"color":     nil,
+				"capacity":  nil,
+				"status":    nil,
+				"assigned":  false,
 			})
 			return
 		}

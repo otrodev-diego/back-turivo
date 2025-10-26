@@ -26,6 +26,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -43,6 +44,7 @@ import (
 	"turivo-backend/internal/infrastructure/payment"
 	"turivo-backend/internal/infrastructure/repository"
 	"turivo-backend/internal/interface/http/handler"
+	"turivo-backend/internal/interface/http/handlers"
 	"turivo-backend/internal/interface/http/middleware"
 	"turivo-backend/internal/interface/http/router"
 	"turivo-backend/internal/usecase"
@@ -110,6 +112,7 @@ func main() {
 	registrationTokenRepo := repository.NewRegistrationTokenRepository(sqlDB, logger)
 	companyRepo := repository.NewCompanyRepository(sqlDB, logger)
 	vehicleRepo := repository.NewVehicleRepository(sqlDB, logger)
+	pricingRepo := repository.NewPricingRepository(sqlDB, logger)
 
 	// Initialize use cases
 	authUseCase := usecase.NewAuthUseCase(userRepo, refreshTokenRepo, passwordService, cfg.JWT.Secret, cfg.JWT.AccessTTL, cfg.JWT.RefreshTTL, logger)
@@ -119,6 +122,7 @@ func main() {
 	paymentUseCase := usecase.NewPaymentUseCase(paymentRepo, reservationRepo, paymentGateway, logger)
 	companyUseCase := usecase.NewCompanyUseCase(companyRepo, logger)
 	vehicleUseCase := usecase.NewVehicleUseCase(vehicleRepo, driverRepo, logger)
+	pricingUseCase := usecase.NewPricingUseCase(pricingRepo, logger)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authUseCase, validate, logger)
@@ -131,6 +135,7 @@ func main() {
 	vehicleHandler := handler.NewVehicleHandler(vehicleUseCase, validate, logger)
 	supportHandler := handler.NewSupportHandler(emailService, userRepo, validate, logger)
 	billingHandler := handler.NewBillingHandler(paymentUseCase, logger)
+	pricingHandler := handlers.NewPricingHandler(pricingUseCase, logger)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(authUseCase, logger)
@@ -194,10 +199,18 @@ func main() {
 		Support:         supportHandler,
 		Admin:           adminHandler,
 		Billing:         billingHandler,
+		Pricing:         pricingHandler,
 	}, authMiddleware)
 
 	// Start server
-	port := ":" + cfg.HTTP.Port
+	// Use PORT environment variable if available, otherwise use config
+	var port string
+	envPort := os.Getenv("PORT")
+	if envPort != "" {
+		port = ":" + envPort
+	} else {
+		port = ":" + cfg.HTTP.Port
+	}
 	logger.Info("Server starting", zap.String("address", port))
 	if err := ginRouter.Run(port); err != nil {
 		logger.Fatal("Failed to start server", zap.Error(err))

@@ -1,10 +1,13 @@
 -- name: CreateReservation :one
-INSERT INTO reservations (id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, assigned_driver_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO reservations (id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, assigned_driver_id, distance_km)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING *;
 
 -- name: GetReservationByID :one
-SELECT * FROM reservations WHERE id = $1;
+SELECT r.*, d.id as driver_id, d.first_name, d.last_name, d.phone, d.email, d.status as driver_status
+FROM reservations r
+LEFT JOIN drivers d ON r.assigned_driver_id = d.id
+WHERE r.id = $1;
 
 -- name: ListReservations :many
 SELECT * FROM reservations

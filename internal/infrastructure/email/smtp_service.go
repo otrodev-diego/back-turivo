@@ -365,20 +365,20 @@ func (s *SMTPService) generateWelcomeEmailHTML(data domain.WelcomeEmailData) (st
             padding: 20px;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #093a5e 0%, #fd711d 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
             border-radius: 8px 8px 0 0;
         }
         .content {
-            background: #f9f9f9;
+            background: #ffffff;
             padding: 30px 20px;
             border-radius: 0 0 8px 8px;
         }
         .button {
             display: inline-block;
-            background: #667eea;
+            background: #fd711d;
             color: white;
             padding: 12px 30px;
             text-decoration: none;
@@ -387,7 +387,7 @@ func (s *SMTPService) generateWelcomeEmailHTML(data domain.WelcomeEmailData) (st
             font-weight: bold;
         }
         .button:hover {
-            background: #5a6fd8;
+            background: #093a5e;
         }
         .footer {
             text-align: center;
@@ -465,14 +465,14 @@ func (s *SMTPService) generateReservationCreatedHTML(data domain.ReservationEmai
             padding: 20px;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #093a5e 0%, #fd711d 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
             border-radius: 8px 8px 0 0;
         }
         .content {
-            background: #f9f9f9;
+            background: #ffffff;
             padding: 30px 20px;
             border-radius: 0 0 8px 8px;
         }
@@ -481,7 +481,7 @@ func (s *SMTPService) generateReservationCreatedHTML(data domain.ReservationEmai
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #fd711d;
         }
         .detail-row {
             display: flex;
@@ -618,14 +618,14 @@ func (s *SMTPService) generateReservationNotificationHTML(data domain.Reservatio
             padding: 20px;
         }
         .header {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            background: linear-gradient(135deg, #093a5e 0%, #fd711d 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
             border-radius: 8px 8px 0 0;
         }
         .content {
-            background: #f9f9f9;
+            background: #ffffff;
             padding: 30px 20px;
             border-radius: 0 0 8px 8px;
         }
@@ -634,7 +634,7 @@ func (s *SMTPService) generateReservationNotificationHTML(data domain.Reservatio
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border-left: 4px solid #ff6b6b;
+            border-left: 4px solid #fd711d;
         }
         .detail-row {
             display: flex;
@@ -784,14 +784,14 @@ func (s *SMTPService) generateSupportRequestHTML(data domain.SupportEmailData) (
             padding: 20px;
         }
         .header {
-            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+            background: linear-gradient(135deg, #093a5e 0%, #fd711d 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
             border-radius: 8px 8px 0 0;
         }
         .content {
-            background: #f9f9f9;
+            background: #ffffff;
             padding: 30px 20px;
             border-radius: 0 0 8px 8px;
         }
@@ -800,14 +800,14 @@ func (s *SMTPService) generateSupportRequestHTML(data domain.SupportEmailData) (
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border-left: 4px solid #feca57;
+            border-left: 4px solid #fd711d;
         }
         .support-details {
-            background: #fff3cd;
+            background: #fff8f0;
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border: 1px solid #ffeaa7;
+            border: 1px solid #fd711d;
         }
         .detail-row {
             display: flex;

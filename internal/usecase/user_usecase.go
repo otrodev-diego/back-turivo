@@ -1,9 +1,13 @@
 package usecase
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -419,6 +423,10 @@ func (uc *UserUseCase) CompleteRegistration(req domain.CompleteRegistrationReque
 		zap.String("user_id", user.ID.String()),
 		zap.String("email", user.Email),
 	)
+
+	// Procesar reservas pendientes en Laravel si existen
+	go uc.processPendingReservations(user.Email)
+
 	return user, nil
 }
 
@@ -456,4 +464,50 @@ func (uc *UserUseCase) generateRegistrationToken() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
+}
+
+// processPendingReservations calls the Laravel API to process pending reservations
+func (uc *UserUseCase) processPendingReservations(email string) {
+	uc.logger.Info("Calling Laravel API to process pending reservations", zap.String("email", email))
+
+	// Get the Laravel URL from environment or use default
+	laravelURL := os.Getenv("LARAVEL_URL")
+	if laravelURL == "" {
+		laravelURL = "http://localhost:9000"
+	}
+
+	// Call the Laravel API to process pending reservations
+	url := fmt.Sprintf("%s/api/process-pending-reservations", laravelURL)
+
+	// Make HTTP POST request
+	client := &http.Client{Timeout: 30 * time.Second}
+	reqBody := map[string]string{"email": email}
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		uc.logger.Error("Failed to marshal request body", zap.Error(err))
+		return
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		uc.logger.Error("Failed to create HTTP request", zap.Error(err))
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		uc.logger.Warn("Failed to call Laravel API", zap.Error(err))
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 200 {
+		uc.logger.Info("Successfully processed pending reservations", zap.String("email", email))
+	} else {
+		uc.logger.Warn("Failed to process pending reservations",
+			zap.String("email", email),
+			zap.Int("status_code", resp.StatusCode))
+	}
 }

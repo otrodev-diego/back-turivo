@@ -39,8 +39,8 @@ func (q *Queries) CountReservations(ctx context.Context, arg CountReservationsPa
 }
 
 const createReservation = `-- name: CreateReservation :one
-INSERT INTO reservations (id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, assigned_driver_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO reservations (id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, assigned_driver_id, distance_km)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id, distance_km, arrived_on_time
 `
 
@@ -56,6 +56,7 @@ type CreateReservationParams struct {
 	Amount           pgtype.Numeric     `json:"amount"`
 	Notes            *string            `json:"notes"`
 	AssignedDriverID *string            `json:"assigned_driver_id"`
+	DistanceKm       pgtype.Numeric     `json:"distance_km"`
 }
 
 func (q *Queries) CreateReservation(ctx context.Context, arg CreateReservationParams) (Reservation, error) {
@@ -71,6 +72,7 @@ func (q *Queries) CreateReservation(ctx context.Context, arg CreateReservationPa
 		arg.Amount,
 		arg.Notes,
 		arg.AssignedDriverID,
+		arg.DistanceKm,
 	)
 	var i Reservation
 	err := row.Scan(
@@ -103,12 +105,39 @@ func (q *Queries) DeleteReservation(ctx context.Context, id string) error {
 }
 
 const getReservationByID = `-- name: GetReservationByID :one
-SELECT id, user_id, org_id, pickup, destination, datetime, passengers, status, amount, notes, created_at, updated_at, assigned_driver_id, distance_km, arrived_on_time FROM reservations WHERE id = $1
+SELECT r.id, r.user_id, r.org_id, r.pickup, r.destination, r.datetime, r.passengers, r.status, r.amount, r.notes, r.created_at, r.updated_at, r.assigned_driver_id, r.distance_km, r.arrived_on_time, d.id as driver_id, d.first_name, d.last_name, d.phone, d.email, d.status as driver_status
+FROM reservations r
+LEFT JOIN drivers d ON r.assigned_driver_id = d.id
+WHERE r.id = $1
 `
 
-func (q *Queries) GetReservationByID(ctx context.Context, id string) (Reservation, error) {
+type GetReservationByIDRow struct {
+	ID               string             `json:"id"`
+	UserID           pgtype.UUID        `json:"user_id"`
+	OrgID            pgtype.UUID        `json:"org_id"`
+	Pickup           string             `json:"pickup"`
+	Destination      string             `json:"destination"`
+	Datetime         pgtype.Timestamptz `json:"datetime"`
+	Passengers       int32              `json:"passengers"`
+	Status           ReservationStatus  `json:"status"`
+	Amount           pgtype.Numeric     `json:"amount"`
+	Notes            *string            `json:"notes"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	AssignedDriverID *string            `json:"assigned_driver_id"`
+	DistanceKm       pgtype.Numeric     `json:"distance_km"`
+	ArrivedOnTime    *bool              `json:"arrived_on_time"`
+	DriverID         *string            `json:"driver_id"`
+	FirstName        *string            `json:"first_name"`
+	LastName         *string            `json:"last_name"`
+	Phone            *string            `json:"phone"`
+	Email            *string            `json:"email"`
+	DriverStatus     NullDriverStatus   `json:"driver_status"`
+}
+
+func (q *Queries) GetReservationByID(ctx context.Context, id string) (GetReservationByIDRow, error) {
 	row := q.db.QueryRow(ctx, getReservationByID, id)
-	var i Reservation
+	var i GetReservationByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -125,6 +154,12 @@ func (q *Queries) GetReservationByID(ctx context.Context, id string) (Reservatio
 		&i.AssignedDriverID,
 		&i.DistanceKm,
 		&i.ArrivedOnTime,
+		&i.DriverID,
+		&i.FirstName,
+		&i.LastName,
+		&i.Phone,
+		&i.Email,
+		&i.DriverStatus,
 	)
 	return i, err
 }

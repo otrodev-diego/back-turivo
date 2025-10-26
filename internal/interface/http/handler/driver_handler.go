@@ -349,3 +349,44 @@ func (h *DriverHandler) GetDriverKPIs(c *gin.Context) {
 	c.JSON(http.StatusOK, kpis)
 }
 
+// GetDriverTrips godoc
+// @Summary Get driver trips
+// @Description Get trips for a specific driver
+// @Tags drivers
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Driver ID"
+// @Success 200 {array} domain.Reservation
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/drivers/{id}/trips [get]
+func (h *DriverHandler) GetDriverTrips(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "Driver ID is required",
+		})
+		return
+	}
+
+	trips, err := h.driverUseCase.GetDriverTrips(id)
+	if err != nil {
+		switch err {
+		case domain.ErrDriverNotFound:
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Error: "Driver not found",
+			})
+		default:
+			h.logger.Error("Failed to get driver trips", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error: "Internal server error",
+			})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, trips)
+}

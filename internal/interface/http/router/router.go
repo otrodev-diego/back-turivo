@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"turivo-backend/internal/interface/http/handler"
+	"turivo-backend/internal/interface/http/handlers"
 	"turivo-backend/internal/interface/http/middleware"
 )
 
@@ -20,6 +21,7 @@ type RouteHandlers struct {
 	Support         *handler.SupportHandler
 	Admin           *handler.AdminHandler
 	Billing         *handler.BillingHandler
+	Pricing         *handlers.PricingHandler
 }
 
 func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *middleware.AuthMiddleware) {
@@ -70,6 +72,7 @@ func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *mid
 				drivers.PATCH("/:id", handlers.Driver.UpdateDriver)
 				drivers.DELETE("/:id", handlers.Driver.DeleteDriver)
 				drivers.GET("/:id/kpis", handlers.Driver.GetDriverKPIs)
+				drivers.GET("/:id/trips", handlers.Driver.GetDriverTrips)
 			}
 
 			// Driver dashboard routes (Driver role only)
@@ -181,6 +184,12 @@ func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *mid
 				{
 					admin.GET("/dashboard", handlers.Admin.GetAdminDashboard)
 				}
+			}
+
+			// Pricing routes (public for now, can be protected later)
+			pricing := v1.Group("/pricing")
+			{
+				pricing.POST("/quote", handlers.Pricing.Quote)
 			}
 		}
 	}
