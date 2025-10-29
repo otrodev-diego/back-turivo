@@ -5,23 +5,24 @@ import (
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 
+	"turivo-backend/internal/domain"
 	"turivo-backend/internal/interface/http/handler"
 	"turivo-backend/internal/interface/http/middleware"
 	"turivo-backend/internal/usecase"
 )
 
 type Router struct {
-	authHandler            *handler.AuthHandler
-	userHandler            *handler.UserHandler
-	driverHandler          *handler.DriverHandler
-	reservationHandler     *handler.ReservationHandler
-	paymentHandler         *handler.PaymentHandler
-	companyHandler         *handler.CompanyHandler
-	companyUserHandler     *handler.CompanyHandler // Para operaciones de usuarios de empresa
-	vehicleHandler         *handler.VehicleHandler
-	supportHandler         *handler.SupportHandler
-	authMiddleware         *middleware.AuthMiddleware
-	logger                 *zap.Logger
+	authHandler        *handler.AuthHandler
+	userHandler        *handler.UserHandler
+	driverHandler      *handler.DriverHandler
+	reservationHandler *handler.ReservationHandler
+	paymentHandler     *handler.PaymentHandler
+	companyHandler     *handler.CompanyHandler
+	companyUserHandler *handler.CompanyHandler // Para operaciones de usuarios de empresa
+	vehicleHandler     *handler.VehicleHandler
+	supportHandler     *handler.SupportHandler
+	authMiddleware     *middleware.AuthMiddleware
+	logger             *zap.Logger
 }
 
 func NewRouter(
@@ -64,6 +65,8 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 			auth.POST("/login", r.authHandler.Login)
 			auth.POST("/refresh", r.authHandler.RefreshToken)
 			auth.POST("/logout", r.authHandler.Logout)
+			auth.POST("/forgot-password", r.authHandler.ForgotPassword)
+			auth.POST("/reset-password", r.authHandler.ResetPassword)
 			auth.POST("/complete-registration", r.userHandler.CompleteRegistration)
 			auth.GET("/validate-token", r.userHandler.ValidateRegistrationToken)
 		}

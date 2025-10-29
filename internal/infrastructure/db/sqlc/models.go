@@ -692,6 +692,19 @@ type Hotel struct {
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
+// Stores password reset tokens for users
+type PasswordResetToken struct {
+	ID     pgtype.UUID `json:"id"`
+	UserID pgtype.UUID `json:"user_id"`
+	// Unique token for password reset
+	Token string `json:"token"`
+	// Token expiration time
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	// Whether the token has been used
+	Used      bool               `json:"used"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type Payment struct {
 	ID             pgtype.UUID        `json:"id"`
 	ReservationID  string             `json:"reservation_id"`

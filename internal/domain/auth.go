@@ -26,6 +26,23 @@ type RefreshTokenResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
+type ForgotPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type ForgotPasswordResponse struct {
+	Message string `json:"message"`
+}
+
+type ResetPasswordRequest struct {
+	Token       string `json:"token" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required,min=8"`
+}
+
+type ResetPasswordResponse struct {
+	Message string `json:"message"`
+}
+
 type JWTClaims struct {
 	UserID         uuid.UUID       `json:"sub"`
 	Role           UserRole        `json:"role"`
@@ -68,6 +85,15 @@ type RefreshToken struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type PasswordResetToken struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+	Used      bool      `json:"used"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type AuthService interface {
 	Login(req LoginRequest) (*LoginResponse, error)
 	RefreshToken(req RefreshTokenRequest) (*RefreshTokenResponse, error)
@@ -75,6 +101,8 @@ type AuthService interface {
 	ValidateAccessToken(token string) (*JWTClaims, error)
 	GenerateAccessToken(user *User) (string, error)
 	GenerateRefreshToken(userID uuid.UUID) (*RefreshToken, error)
+	ForgotPassword(req ForgotPasswordRequest) (*ForgotPasswordResponse, error)
+	ResetPassword(req ResetPasswordRequest) (*ResetPasswordResponse, error)
 }
 
 type RefreshTokenRepository interface {
@@ -82,6 +110,13 @@ type RefreshTokenRepository interface {
 	GetByToken(token string) (*RefreshToken, error)
 	Delete(token string) error
 	DeleteByUserID(userID uuid.UUID) error
+}
+
+type PasswordResetTokenRepository interface {
+	Create(token *PasswordResetToken) error
+	GetByToken(token string) (*PasswordResetToken, error)
+	MarkAsUsed(token string) error
+	DeleteExpiredTokens() error
 }
 
 type PasswordService interface {

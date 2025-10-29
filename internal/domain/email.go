@@ -7,6 +7,7 @@ type EmailService interface {
 	SendReservationCreated(to string, reservation *Reservation, user *User) error
 	SendReservationNotification(to string, reservation *Reservation, user *User) error
 	SendSupportRequest(to string, request *SupportRequest, user *User) error
+	SendPasswordResetEmail(email, name, resetLink string) error
 }
 
 type WelcomeEmailData struct {

@@ -106,6 +106,7 @@ func main() {
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(dbPool)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(dbPool)
+	passwordResetTokenRepo := repository.NewPasswordResetTokenRepository(dbPool)
 	driverRepo := repository.NewDriverRepository(dbPool)
 	reservationRepo := repository.NewReservationRepository(dbPool, logger)
 	paymentRepo := repository.NewPaymentRepository(dbPool)
@@ -115,7 +116,7 @@ func main() {
 	pricingRepo := repository.NewPricingRepository(sqlDB, logger)
 
 	// Initialize use cases
-	authUseCase := usecase.NewAuthUseCase(userRepo, refreshTokenRepo, passwordService, cfg.JWT.Secret, cfg.JWT.AccessTTL, cfg.JWT.RefreshTTL, logger)
+	authUseCase := usecase.NewAuthUseCase(userRepo, refreshTokenRepo, passwordResetTokenRepo, passwordService, emailService, cfg.JWT.Secret, cfg.JWT.AccessTTL, cfg.JWT.RefreshTTL, logger)
 	userUseCase := usecase.NewUserUseCase(userRepo, registrationTokenRepo, passwordService, emailService, logger)
 	driverUseCase := usecase.NewDriverUseCase(driverRepo, userRepo, emailService, registrationTokenRepo, passwordService, logger)
 	reservationUseCase := usecase.NewReservationUseCase(reservationRepo, driverRepo, userRepo, emailService, logger)

@@ -365,20 +365,20 @@ func (s *SMTPService) generateWelcomeEmailHTML(data domain.WelcomeEmailData) (st
             padding: 20px;
         }
         .header {
-            background: linear-gradient(135deg, #093a5e 0%, #fd711d 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
             border-radius: 8px 8px 0 0;
         }
         .content {
-            background: #ffffff;
+            background: #f9f9f9;
             padding: 30px 20px;
             border-radius: 0 0 8px 8px;
         }
         .button {
             display: inline-block;
-            background: #fd711d;
+            background: #667eea;
             color: white;
             padding: 12px 30px;
             text-decoration: none;
@@ -387,7 +387,7 @@ func (s *SMTPService) generateWelcomeEmailHTML(data domain.WelcomeEmailData) (st
             font-weight: bold;
         }
         .button:hover {
-            background: #093a5e;
+            background: #5a6fd8;
         }
         .footer {
             text-align: center;
@@ -465,14 +465,14 @@ func (s *SMTPService) generateReservationCreatedHTML(data domain.ReservationEmai
             padding: 20px;
         }
         .header {
-            background: linear-gradient(135deg, #093a5e 0%, #fd711d 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
             border-radius: 8px 8px 0 0;
         }
         .content {
-            background: #ffffff;
+            background: #f9f9f9;
             padding: 30px 20px;
             border-radius: 0 0 8px 8px;
         }
@@ -481,7 +481,7 @@ func (s *SMTPService) generateReservationCreatedHTML(data domain.ReservationEmai
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border-left: 4px solid #fd711d;
+            border-left: 4px solid #667eea;
         }
         .detail-row {
             display: flex;
@@ -618,14 +618,14 @@ func (s *SMTPService) generateReservationNotificationHTML(data domain.Reservatio
             padding: 20px;
         }
         .header {
-            background: linear-gradient(135deg, #093a5e 0%, #fd711d 100%);
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
             border-radius: 8px 8px 0 0;
         }
         .content {
-            background: #ffffff;
+            background: #f9f9f9;
             padding: 30px 20px;
             border-radius: 0 0 8px 8px;
         }
@@ -634,7 +634,7 @@ func (s *SMTPService) generateReservationNotificationHTML(data domain.Reservatio
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border-left: 4px solid #fd711d;
+            border-left: 4px solid #ff6b6b;
         }
         .detail-row {
             display: flex;
@@ -784,14 +784,14 @@ func (s *SMTPService) generateSupportRequestHTML(data domain.SupportEmailData) (
             padding: 20px;
         }
         .header {
-            background: linear-gradient(135deg, #093a5e 0%, #fd711d 100%);
+            background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
             border-radius: 8px 8px 0 0;
         }
         .content {
-            background: #ffffff;
+            background: #f9f9f9;
             padding: 30px 20px;
             border-radius: 0 0 8px 8px;
         }
@@ -800,14 +800,14 @@ func (s *SMTPService) generateSupportRequestHTML(data domain.SupportEmailData) (
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border-left: 4px solid #fd711d;
+            border-left: 4px solid #feca57;
         }
         .support-details {
-            background: #fff8f0;
+            background: #fff3cd;
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border: 1px solid #fd711d;
+            border: 1px solid #ffeaa7;
         }
         .detail-row {
             display: flex;
@@ -902,6 +902,146 @@ func (s *SMTPService) generateSupportRequestHTML(data domain.SupportEmailData) (
 	var buf bytes.Buffer
 	if err := t.Execute(&buf, data); err != nil {
 		return "", fmt.Errorf("failed to execute support request template: %w", err)
+	}
+
+	return buf.String(), nil
+}
+
+func (s *SMTPService) SendPasswordResetEmail(email, name, resetLink string) error {
+	s.logger.Info("📧 === SendPasswordResetEmail Started ===",
+		zap.String("email", email),
+		zap.String("name", name),
+		zap.String("smtp_host", s.host),
+		zap.Int("smtp_port", s.port),
+		zap.String("smtp_username", s.username),
+	)
+
+	subject := "Restablecer tu contraseña - Turivo"
+	body, err := s.generatePasswordResetEmailHTML(name, resetLink)
+	if err != nil {
+		s.logger.Error("Failed to generate password reset email HTML", zap.Error(err))
+		return fmt.Errorf("failed to generate password reset email HTML: %w", err)
+	}
+
+	return s.sendEmail(email, subject, body)
+}
+
+func (s *SMTPService) generatePasswordResetEmailHTML(name, resetLink string) (string, error) {
+	tmpl := `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restablecer Contraseña - Turivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px 20px;
+            border-radius: 0 0 8px 8px;
+        }
+        .button {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .button:hover {
+            background: #ee5a24;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Restablecer Contraseña</h1>
+        <p>Turivo - Recuperación de acceso</p>
+    </div>
+    
+    <div class="content">
+        <h2>Hola {{.Name}},</h2>
+        
+        <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en <strong>Turivo</strong>.</p>
+        
+        <p>Si solicitaste este cambio, haz clic en el siguiente botón para crear una nueva contraseña:</p>
+        
+        <div style="text-align: center;">
+            <a href="{{.ResetLink}}" class="button">Restablecer Contraseña</a>
+        </div>
+        
+        <div class="warning">
+            <p><strong>⚠️ Importante:</strong></p>
+            <ul>
+                <li>Este enlace expirará en 24 horas por seguridad</li>
+                <li>Solo puede ser usado una vez</li>
+                <li>Si no solicitaste este cambio, puedes ignorar este correo</li>
+            </ul>
+        </div>
+        
+        <p>Si el botón no funciona, puedes copiar y pegar el siguiente enlace en tu navegador:</p>
+        <p style="word-break: break-all; background: #f0f0f0; padding: 10px; border-radius: 4px; font-family: monospace;">{{.ResetLink}}</p>
+        
+        <p>Si tienes problemas para acceder a tu cuenta o necesitas ayuda adicional, no dudes en contactarnos.</p>
+        
+        <p>Saludos cordiales,<br>
+        <strong>El equipo de Turivo</strong></p>
+    </div>
+    
+    <div class="footer">
+        <p>Este es un mensaje automático, por favor no respondas a este correo.</p>
+        <p>© 2024 Turivo. Todos los derechos reservados.</p>
+    </div>
+</body>
+</html>
+`
+
+	data := struct {
+		Name      string
+		ResetLink string
+	}{
+		Name:      name,
+		ResetLink: resetLink,
+	}
+
+	t, err := template.New("password-reset").Parse(tmpl)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse password reset template: %w", err)
+	}
+
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("failed to execute password reset template: %w", err)
 	}
 
 	return buf.String(), nil

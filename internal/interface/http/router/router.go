@@ -34,6 +34,8 @@ func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *mid
 			auth.POST("/login", handlers.Auth.Login)
 			auth.POST("/refresh", handlers.Auth.RefreshToken)
 			auth.POST("/logout", handlers.Auth.Logout)
+			auth.POST("/forgot-password", handlers.Auth.ForgotPassword)
+			auth.POST("/reset-password", handlers.Auth.ResetPassword)
 			auth.POST("/complete-registration", handlers.User.CompleteRegistration)
 			auth.GET("/validate-token", handlers.User.ValidateRegistrationToken)
 			auth.GET("/tokens", handlers.User.ListRegistrationTokens)
@@ -72,7 +74,6 @@ func SetupRoutes(engine *gin.Engine, handlers RouteHandlers, authMiddleware *mid
 				drivers.PATCH("/:id", handlers.Driver.UpdateDriver)
 				drivers.DELETE("/:id", handlers.Driver.DeleteDriver)
 				drivers.GET("/:id/kpis", handlers.Driver.GetDriverKPIs)
-				drivers.GET("/:id/trips", handlers.Driver.GetDriverTrips)
 			}
 
 			// Driver dashboard routes (Driver role only)

@@ -84,9 +84,6 @@ func Load() (*Config, error) {
 
 	config := &Config{}
 
-	// Check if DATABASE_URL is provided (common in Render, Heroku, etc.)
-	databaseURL := viper.GetString("DATABASE_URL")
-
 	// Map environment variables to config struct
 	config.HTTP.Port = viper.GetString("HTTP_PORT")
 	config.DB.Host = viper.GetString("DB_HOST")
@@ -119,11 +116,8 @@ func Load() (*Config, error) {
 	}
 	config.JWT.RefreshTTL = refreshTTL
 
-	// Prioritize DATABASE_URL if provided (Render, Heroku, etc.)
-	if databaseURL != "" {
-		config.DB.DSN = databaseURL
-	} else if config.DB.DSN == "" {
-		// Generate DSN if not provided
+	// Generate DSN if not provided
+	if config.DB.DSN == "" {
 		config.DB.DSN = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 			config.DB.User, config.DB.Password, config.DB.Host, config.DB.Port,
 			config.DB.Name, config.DB.SSLMode)

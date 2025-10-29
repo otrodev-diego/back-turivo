@@ -179,6 +179,104 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	})
 }
 
+// ForgotPassword godoc
+// @Summary Request password reset
+// @Description Send password reset email to user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body domain.ForgotPasswordRequest true "Email address"
+// @Success 200 {object} domain.ForgotPasswordResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/auth/forgot-password [post]
+func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+	var req domain.ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn("Invalid request body for forgot password", zap.Error(err))
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "Invalid request body",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	if err := h.validator.Struct(req); err != nil {
+		h.logger.Warn("Validation failed for forgot password", zap.Error(err))
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "Validation failed",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	response, err := h.authUseCase.ForgotPassword(req)
+	if err != nil {
+		h.logger.Error("Forgot password failed", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "Internal server error",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// ResetPassword godoc
+// @Summary Reset password with token
+// @Description Reset user password using reset token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body domain.ResetPasswordRequest true "Reset password data"
+// @Success 200 {object} domain.ResetPasswordResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/auth/reset-password [post]
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	var req domain.ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn("Invalid request body for reset password", zap.Error(err))
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "Invalid request body",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	if err := h.validator.Struct(req); err != nil {
+		h.logger.Warn("Validation failed for reset password", zap.Error(err))
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "Validation failed",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	response, err := h.authUseCase.ResetPassword(req)
+	if err != nil {
+		switch err {
+		case domain.ErrUnauthorized:
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Error: "Invalid or expired reset token",
+			})
+		case domain.ErrUserBlocked:
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Error: "User account is blocked",
+			})
+		default:
+			h.logger.Error("Reset password failed", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error: "Internal server error",
+			})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 // Common response structures
 type ErrorResponse struct {
 	Error   string `json:"error"`
@@ -188,4 +286,3 @@ type ErrorResponse struct {
 type MessageResponse struct {
 	Message string `json:"message"`
 }
-
