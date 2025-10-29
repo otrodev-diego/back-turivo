@@ -12,17 +12,18 @@ import (
 )
 
 type Router struct {
-	authHandler        *handler.AuthHandler
-	userHandler        *handler.UserHandler
-	driverHandler      *handler.DriverHandler
-	reservationHandler *handler.ReservationHandler
-	paymentHandler     *handler.PaymentHandler
-	companyHandler     *handler.CompanyHandler
-	companyUserHandler *handler.CompanyHandler // Para operaciones de usuarios de empresa
-	vehicleHandler     *handler.VehicleHandler
-	supportHandler     *handler.SupportHandler
-	authMiddleware     *middleware.AuthMiddleware
-	logger             *zap.Logger
+	authHandler            *handler.AuthHandler
+	userHandler            *handler.UserHandler
+	driverHandler          *handler.DriverHandler
+	driverDashboardHandler *handler.DriverDashboardHandler
+	reservationHandler     *handler.ReservationHandler
+	paymentHandler         *handler.PaymentHandler
+	companyHandler         *handler.CompanyHandler
+	companyUserHandler     *handler.CompanyHandler // Para operaciones de usuarios de empresa
+	vehicleHandler         *handler.VehicleHandler
+	supportHandler         *handler.SupportHandler
+	authMiddleware         *middleware.AuthMiddleware
+	logger                 *zap.Logger
 }
 
 func NewRouter(
@@ -38,13 +39,14 @@ func NewRouter(
 	logger *zap.Logger,
 ) *Router {
 	return &Router{
-		authHandler:        handler.NewAuthHandler(authUseCase, validator, logger),
-		userHandler:        handler.NewUserHandler(userUseCase, validator, logger),
-		driverHandler:      handler.NewDriverHandler(driverUseCase, validator, logger),
-		reservationHandler: handler.NewReservationHandler(reservationUseCase, validator, logger),
-		paymentHandler:     handler.NewPaymentHandler(paymentUseCase, validator, logger),
-		companyHandler:     handler.NewCompanyHandler(companyUseCase, validator, logger),
-		vehicleHandler:     handler.NewVehicleHandler(vehicleUseCase, validator, logger),
+		authHandler:            handler.NewAuthHandler(authUseCase, validator, logger),
+		userHandler:            handler.NewUserHandler(userUseCase, validator, logger),
+		driverHandler:          handler.NewDriverHandler(driverUseCase, validator, logger),
+		driverDashboardHandler: handler.NewDriverDashboardHandler(driverUseCase, logger),
+		reservationHandler:     handler.NewReservationHandler(reservationUseCase, validator, logger),
+		paymentHandler:         handler.NewPaymentHandler(paymentUseCase, validator, logger),
+		companyHandler:         handler.NewCompanyHandler(companyUseCase, validator, logger),
+		vehicleHandler:         handler.NewVehicleHandler(vehicleUseCase, validator, logger),
 		// supportHandler will be initialized in the main app setup
 		authMiddleware: authMiddleware,
 		logger:         logger,
