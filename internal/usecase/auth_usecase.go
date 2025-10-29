@@ -3,6 +3,7 @@ package usecase
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -256,7 +257,11 @@ func (uc *AuthUseCase) ForgotPassword(req domain.ForgotPasswordRequest) (*domain
 	}
 
 	// Send email with reset link
-	resetLink := "http://localhost:8080/auth/reset-password?token=" + resetToken.Token
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "https://turivo-flow.vercel.app"
+	}
+	resetLink := frontendURL + "/auth/reset-password?token=" + resetToken.Token
 	err = uc.emailService.SendPasswordResetEmail(user.Email, user.Name, resetLink)
 	if err != nil {
 		// In non-critical flows like forgot password, we don't want to leak email delivery issues
